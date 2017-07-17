@@ -73,4 +73,9 @@ def setup_response(user, back):
                         max_age=conf.app['cookie_period'],
                         overwrite=True)
     response.status_code = 303
-    response.location = urllib.unquote_plus(back).decode("utf8")
+    back = urllib.unquote_plus(back).decode("utf8")
+    if 'r/login/#' in back:
+        back = back.replace('r/login/', 'r/login?back=/r/')
+    if '#' in back:
+        back = back.replace('#', '|')
+    response.location = back
