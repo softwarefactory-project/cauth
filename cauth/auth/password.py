@@ -98,7 +98,9 @@ class LDAPAuthPlugin(BasePasswordAuthPlugin):
             logger.error('Client unable to bind on LDAP invalid credentials.')
             raise base.UnauthenticatedError('invalid credentials')
 
-        result = conn.search_s(who, ldap.SCOPE_SUBTREE, '(cn=*)',
+        basedn = self.conf.get('basedn', who)
+        sfilter = self.conf.get('sfilter', '(cn=*)') % {'username': username}
+        result = conn.search_s(basedn, ldap.SCOPE_SUBTREE, sfilter,
                                attrlist=[self.conf['sn'], self.conf['mail']])
         if len(result) == 1:
             user = result[0]  # user is a tuple
