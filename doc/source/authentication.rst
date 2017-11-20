@@ -112,6 +112,34 @@ LDAP
 * **sn**: the attribute to use for the full name
 * **mail**: the attribute to use as the user's e-mail
 
+LDAP (for Active Directory)
+,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
+This example illustrates how to use LDAP authentication in a more
+arbitrary scenario. In this case, the user account used to bind to the
+directory does not map directly to the cn, and a search filter has to
+look up the user's information.
+
+.. code-block:: python
+
+   auth = {
+      'ldap': {
+          'host': 'ldap://adc00.branch.example.com',
+          'dn': '%(username)s@branch.example.com',
+          'basedn': 'ou=people,dc=branch,dc=example,dc=com',
+          'sfilter': '(&(objectClass=user)(sAMAccountName=%(username)s))',
+          'sn': 'name',
+          'mail': 'mail',
+      },
+   }
+
+* **host**: the ldap URI to bind to
+* **dn**: the user's login, used to bind to the ldap directory
+* **basedn**: the base distinguished name, used to start the ldap search from
+* **sfilter**: the search filter, used to match the user's entry
+* **sn**: the attribute to use for the full name
+* **mail**: the attribute to use as the user's e-mail
+
 Login with GitHub
 -----------------
 
