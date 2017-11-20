@@ -43,7 +43,7 @@ class OAuth2Controller(object):
                     invoke_on_load=True,
                     invoke_args=(conf,)).driver
                 logger.info('Loaded OAuth2 plugin %s' % p)
-            except:
+            except Exception:
                 pass
         if not self.auth_plugins:
             msg = ('no valid configuration found for any of the '
