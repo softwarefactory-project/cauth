@@ -16,3 +16,4 @@ pygerrit # see dependency in pysflib
 python-redmine==1.2.0
 stevedore==1.7.0
 wsgiref==0.1.2
+WebOb>=1.7.0,<1.8.0
