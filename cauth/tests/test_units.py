@@ -265,13 +265,18 @@ class TestCauthApp(FunctionalTest):
         with patch(to_patch) as cu:
             cu.return_value = 42
             with patch('requests.get'):
+                # Not authenticated
+                key_get = self.app.get('/apikey', status="*")
+                self.assertEqual(401,
+                                 key_get.status_int)
+                # Authenticate
                 response = self.app.post_json('/login',
                                               payload)
                 self.assertEqual(303,
                                  response.status_int)
                 # No key to begin with
                 key_get = self.app.get('/apikey', status="*")
-                self.assertEqual(401,
+                self.assertEqual(404,
                                  key_get.status_int)
                 good_cookie = common.create_ticket(cid=42, uid='user2')
                 self.app.set_cookie('auth_pubtkt', good_cookie)
