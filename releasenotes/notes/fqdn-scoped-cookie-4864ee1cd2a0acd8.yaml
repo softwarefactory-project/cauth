@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Authentication cookie are no longer scoped to the domain to prevent conflict
+    with sub domain names.

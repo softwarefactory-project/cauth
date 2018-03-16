@@ -69,7 +69,6 @@ def setup_response(user, back):
     enc_ticket = urllib.quote_plus(ticket)
     response.set_cookie('auth_pubtkt',
                         value=enc_ticket,
-                        domain=conf.app['cookie_domain'],
                         max_age=conf.app['cookie_period'],
                         overwrite=True)
     response.status_code = 303
