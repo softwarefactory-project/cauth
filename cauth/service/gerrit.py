@@ -33,14 +33,12 @@ class GerritServicePlugin(base.BaseServicePlugin):
 
     def add_sshkeys(self, username, keys):
         """add keys for username."""
-        url = "%s/api/a/accounts/%s/sshkeys" % (self.conf['url'],
-                                                username)
+        url = "%s/accounts/%s/sshkeys" % (self.conf['url'], username)
         for key in keys:
             logger.debug("Adding key %s for user %s" % (key.get('key'),
                                                         username))
             response = requests.post(url, data=key.get('key'),
-                                     auth=(self.conf['admin_user'],
-                                           self.conf['admin_password']))
+                                     auth=("admin", self.conf['password']))
 
             if not response.ok:
                 msg = 'Failed to add ssh key %s of %s: %s' % (key.get('key'),
@@ -67,15 +65,40 @@ class GerritServicePlugin(base.BaseServicePlugin):
             logger.exception(msg)
             return False
 
+    def set_api_key(self, user, password):
+        """add http password for username."""
+        if user == "admin":
+            return
+        url = "%s/accounts/%s/password.http" % (self.conf['url'], user)
+        resp = requests.put(url, json={'http_password': password},
+                            auth=("admin", self.conf["password"]))
+        if resp.ok:
+            logger.info('Set http password of %s' % user)
+        else:
+            msg = 'Failed to add http password of %s: %s' % (user, resp)
+            logger.error(msg)
+
+    def delete_api_key(self, user):
+        """remove http password for username."""
+        url = "%s/accounts/%s/password.http" % (self.conf['url'], user)
+        resp = requests.put(url, json={'generate': True},
+                            auth=("admin", self.conf["password"]))
+        if resp.ok:
+            logger.info('Removed http password of %s' % user)
+        else:
+            msg = 'Failed to remove http password of %s: %s' % (user, resp)
+            logger.error(msg)
+
     def register_new_user(self, user):
+        if not self.conf.get("register_user", True):
+            return
         _user = {"name": unicode(user['name']), "email": str(user['email'])}
         data = json.dumps(_user, default=lambda o: o.__dict__)
 
         headers = {"Content-type": "application/json"}
-        url = "%s/api/a/accounts/%s" % (self.conf['url'], user['login'])
+        url = "%s/accounts/%s" % (self.conf['url'], user['login'])
         response = requests.put(url, data=data, headers=headers,
-                                auth=(self.conf['admin_user'],
-                                      self.conf['admin_password']))
+                                auth=("admin", self.conf['password']))
         if not response.ok:
             msg = 'Failed to register new user %s: %s' % (user['email'],
                                                           response)
@@ -83,8 +106,7 @@ class GerritServicePlugin(base.BaseServicePlugin):
             return False
 
         response = requests.get(url, headers=headers,
-                                auth=(self.conf['admin_user'],
-                                      self.conf['admin_password']))
+                                auth=("admin", self.conf['password']))
         data = response.content[4:]  # there is some garbage at the beginning
         try:
             account_id = json.loads(data)['_account_id']

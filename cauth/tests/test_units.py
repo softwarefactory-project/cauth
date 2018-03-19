@@ -313,6 +313,7 @@ class TestCauthApp(FunctionalTest):
                 self.assertEqual(409,
                                  key_create.status_int)
                 # Try to fetch the key authenticated as someone else
+                self.app.reset()
                 bad_cookie = common.create_ticket(cid=99, uid='user3')
                 self.app.set_cookie('auth_pubtkt', bad_cookie)
                 key_get = self.app.get('/apikey/?cauth_id=42', status="*")
