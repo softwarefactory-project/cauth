@@ -29,6 +29,9 @@ class RedmineServicePlugin(base.BaseServicePlugin):
 
     _config_section = "redmine"
 
+    def register_api_key(self, user, password):
+        pass
+
     def register_new_user(self, user):
         r = RedmineUtils(self.conf['apiurl'],
                          key=self.conf['apikey'])

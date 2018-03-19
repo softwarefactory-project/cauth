@@ -53,6 +53,10 @@ class BaseServicePlugin(object):
         :param user: a dictionary containing the user's properties"""
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def register_api_key(self, user, apikey):
+        raise NotImplementedError
+
 #    @abc.abstractmethod
 #    def logout_from_service(self, *args, **kwargs):
 #        """Actions to take when logging out from the service."""

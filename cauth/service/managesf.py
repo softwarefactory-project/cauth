@@ -35,6 +35,9 @@ class ManageSFServicePlugin(base.BaseServicePlugin):
 
     _config_section = "managesf"
 
+    def register_api_key(self, user, key):
+        pass
+
     def register_new_user(self, user):
         _user = {"full_name": user['name'],
                  "email": str(user['email']),
