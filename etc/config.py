@@ -122,13 +122,9 @@ redmine = {
 }
 
 gerrit = {
-    'url': 'http://gerrit.url',
-    'admin_user': 'admin',
-    'admin_password': 'password',
-    'db_host': 'gerrit_mysql_address',
-    'db_name': 'gerrit_mysql_db',
-    'db_user': 'gerrit_mysql_username',
-    'db_password': 'gerrit_sql_pwd'
+    'url': 'http://gerrit.url/r/',
+    'password': 'http-password',
+    'register_user': True
 }
 
 managesf = {

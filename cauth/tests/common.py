@@ -139,8 +139,8 @@ class dummy_conf():
                         'apiurl': 'http://api-redmine.test.dom',
                         }
         self.gerrit = {'url': 'XXX',
-                       'admin_user': 'admin',
-                       'admin_password': 'wxcvbn',
+                       'password': 'wxcvbn',
+                       'register_user': True,
                        'db_host': 'mysql.tests.dom',
                        'db_name': 'gerrit',
                        'db_user': 'gerrit',
