@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba3cc151_5490acec",
+        "filename": "cauth/tests/common.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-03-21T09:48:50Z",
+      "side": 1,
+      "message": "This can be removed",
+      "range": {
+        "startLine": 144,
+        "startChar": 0,
+        "endLine": 147,
+        "endChar": 47
+      },
+      "revId": "4ab4e1451f5c0b613362f6d819571111d722aaee",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
