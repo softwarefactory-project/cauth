@@ -128,30 +128,23 @@ class TestGerritPlugin(TestCase):
             name='managesf',
             invoke_on_load=True,
             invoke_args=(self.conf,)).driver
-        patches = [patch('cauth.service.managesf.requests.post'),
-                   patch('cauth.service.managesf.create_ticket'),
-                   patch('cauth.service.managesf.orig_conf'), ]
-        with nested(*patches) as (post, create_ticket, p_conf):
-            p_conf.app = self.conf.app
-            create_ticket.return_value = 'MAGICCOOKIE'
+        patches = [patch('cauth.service.managesf.requests.post')]
+        with nested(*patches) as (post, ):
             msf.register_new_user({'login': 'john',
                                    'email': 'john@tests.dom',
                                    'name': 'John Doe',
                                    'ssh_keys': [],
                                    'external_id': 42})
-            url = "%s/manage/services_users/" % self.conf.managesf['url']
-            data = json.dumps({"full_name": "John Doe",
-                               "email": "john@tests.dom",
-                               "username": "john",
-                               "ssh_keys": [],
-                               'external_id': 42},
-                              default=lambda o: o.__dict__)
-            headers = {"Content-type": "application/json"}
-            cookie = {'auth_pubtkt': 'MAGICCOOKIE'}
+            url = "%s/services_users/" % self.conf.managesf['url']
+            data = {"full_name": "John Doe",
+                    "email": "john@tests.dom",
+                    "username": "john",
+                    "ssh_keys": [],
+                    'external_id': 42}
+            headers = {"X-Remote-User": "admin"}
             post.assert_called_with(url,
-                                    data=data,
-                                    headers=headers,
-                                    cookies=cookie)
+                                    json=data,
+                                    headers=headers)
 
     def test_create_repoxplorer_user(self):
         msf = driver.DriverManager(

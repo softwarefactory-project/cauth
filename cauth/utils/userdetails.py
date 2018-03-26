@@ -21,10 +21,10 @@ from stevedore import driver
 from cauth.service import base
 from cauth.model import db as auth_map
 
-logger = logging.getLogger(__name__)
-
 
 class UserDetailsCreator:
+    log = logging.getLogger(__name__)
+
     def __init__(self, conf):
         self.services = []
         for service in conf.services:
@@ -36,7 +36,7 @@ class UserDetailsCreator:
                     invoke_args=(conf,)).driver
                 self.services.append(plugin)
             except base.ServiceConfigurationError as e:
-                logger.error(e.message)
+                self.log.error(e.message)
 
     def create_user(self, user):
         external_info = user.get('external_auth', {})
@@ -55,7 +55,6 @@ class UserDetailsCreator:
             try:
                 service.register_new_user(user)
             except base.UserRegistrationError as e:
-                logger.info('When adding user %s (ID %s): %s' % (user['login'],
-                                                                 c_id,
-                                                                 e.message))
+                self.log.error('When adding user %s (ID %s): %s' % (
+                    user['login'], c_id, e.message))
         return c_id

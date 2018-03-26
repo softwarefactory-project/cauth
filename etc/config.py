@@ -128,5 +128,5 @@ gerrit = {
 }
 
 managesf = {
-    'url': 'http://managesf.url',
+    'url': 'http://managesf.url:20001',
 }

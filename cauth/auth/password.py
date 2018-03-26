@@ -227,8 +227,10 @@ class PasswordAuthPlugin(BasePasswordAuthPlugin):
         for plugin in self.plugins:
             try:
                 user = plugin.authenticate(**auth_context)
+                logger.info("Plugin worked: %s" % repr(plugin))
             except base.UnauthenticatedError:
                 pass
         if user:
+            logger.info("Authenticated: %s" % user)
             return user
         raise base.UnauthenticatedError('Password authentication failed')
