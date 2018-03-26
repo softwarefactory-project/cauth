@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Login is now a primary key to prevent multiple user from different
+    identity provider to share the same login.

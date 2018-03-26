@@ -82,10 +82,11 @@ class auth_mapping(Base):
     # we cannot be sure every IdP will provide a numeric uid so go with String
     # and just to be sure, a huge one
     external_id = Column(String(MAX_URL_LEN))
+    login = Column(String(MAX_URL_LEN), primary_key=True)
 
 
-def get_or_create_authenticated_user(domain, external_id):
-    filtering = {}
+def get_or_create_authenticated_user(domain, external_id, login):
+    filtering = {'login': login}
     if domain:
         filtering['domain'] = domain
     if external_id:
@@ -95,7 +96,8 @@ def get_or_create_authenticated_user(domain, external_id):
         return user.cauth_id
     except NoResultFound:
         user = auth_mapping(domain=domain,
-                            external_id=external_id)
+                            external_id=external_id,
+                            login=login)
         Session.add(user)
         Session.commit()
         return user.cauth_id

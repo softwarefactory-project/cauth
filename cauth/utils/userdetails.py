@@ -40,16 +40,15 @@ class UserDetailsCreator:
 
     def create_user(self, user):
         external_info = user.get('external_auth', {})
+        external_info["login"] = user["login"]
         c_id = -1
         # skip if authenticating with an API key
-        if external_info:
-            if external_info.get('domain') == 'CAUTH_API_KEY':
-                c_id = external_info['external_id']
-            else:
-                c_id = auth_map.get_or_create_authenticated_user(
-                    **external_info)
-            del user['external_auth']
-            user['external_id'] = c_id
+        if external_info.get('domain') == 'CAUTH_API_KEY':
+            c_id = external_info['external_id']
+        else:
+            c_id = auth_map.get_or_create_authenticated_user(**external_info)
+        del user['external_auth']
+        user['external_id'] = c_id
         for service in self.services:
             try:
                 service.register_new_user(user)
