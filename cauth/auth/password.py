@@ -144,7 +144,7 @@ class ManageSFAuthPlugin(BasePasswordAuthPlugin):
                                   'external_id': username}}
 
     def get_domain(self):
-        return self.conf['managesf_url']
+        return self.conf['managesf_url'].split(':')[0]
 
 
 class KeystoneAuthPlugin(BasePasswordAuthPlugin):
@@ -227,8 +227,10 @@ class PasswordAuthPlugin(BasePasswordAuthPlugin):
         for plugin in self.plugins:
             try:
                 user = plugin.authenticate(**auth_context)
+                logger.info("Plugin worked: %s" % repr(plugin))
             except base.UnauthenticatedError:
                 pass
         if user:
+            logger.info("Authenticated: %s" % user)
             return user
         raise base.UnauthenticatedError('Password authentication failed')
