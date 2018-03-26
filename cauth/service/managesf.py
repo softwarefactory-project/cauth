@@ -15,25 +15,17 @@
 # under the License.
 
 
-import json
 import logging
-import time
-import urllib
-
-from pecan import conf as orig_conf
 import requests
 
 from cauth.service import base
-from cauth.utils.common import create_ticket
-
-
-logger = logging.getLogger(__name__)
 
 
 class ManageSFServicePlugin(base.BaseServicePlugin):
     """This plugin deals with the ManageSF wrapper."""
 
     _config_section = "managesf"
+    log = logging.getLogger(__name__)
 
     def set_api_key(self, user, key):
         pass
@@ -48,17 +40,8 @@ class ManageSFServicePlugin(base.BaseServicePlugin):
                  "ssh_keys": user.get('ssh_keys', []),
                  "external_id": user['external_id']
                  }
-        data = json.dumps(_user, default=lambda o: o.__dict__)
-
-        headers = {"Content-type": "application/json",
-                   "X-Remote-User": "admin"}
         url = "%s/services_users/" % self.conf['url']
-        # assuming the admin user is called admin
-        validity = time.time() + orig_conf.app['cookie_period']
-        ticket = create_ticket(uid='admin',
-                               validuntil=validity)
-        cookie = {'auth_pubtkt': urllib.quote_plus(ticket)}
-        logger.debug('user declaration to managesf: %s' % data)
-        resp = requests.post(url, data=data, headers=headers,
-                             cookies=cookie)
-        logger.debug('managesf responded with code: %s' % resp.status_code)
+        self.log.debug('user declaration to managesf: %s' % _user)
+        resp = requests.post(url, json=_user,
+                             headers={"X-Remote-User": "admin"})
+        self.log.debug('managesf responded with code: %s' % resp.status_code)

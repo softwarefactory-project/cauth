@@ -148,12 +148,12 @@ class TestCauthApp(FunctionalTest):
                    'back': 'r/',
                    'args': {'username': 'baduser',
                             'password': 'userpass'}, }
-        with patch('requests.get'):
+        with patch('requests.get') as g:
+            g.return_value = FakeResponse(401)
             # baduser is not known from the mocked backend
-            with patch('cauth.utils.userdetails'):
-                response = self.app.post_json('/login',
-                                              payload,
-                                              status="*")
+            response = self.app.post_json('/login',
+                                          payload,
+                                          status="*")
             self.assertEqual(response.status_int, 401)
             # Try with no creds
             with patch('cauth.utils.userdetails'):
