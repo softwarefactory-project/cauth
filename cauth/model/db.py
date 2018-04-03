@@ -24,6 +24,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.exc import NoResultFound
 
+from cauth.utils import exceptions
+
 
 Base = declarative_base()
 Session = scoped_session(sessionmaker())
@@ -31,7 +33,7 @@ Session = scoped_session(sessionmaker())
 
 STATE_LEN = 16
 API_KEY_LEN = 32
-MAX_URL_LEN = 4096
+MAX_BLOB_LEN = MAX_URL_LEN = 4096
 
 
 def gen_state(len):
@@ -78,13 +80,14 @@ class auth_mapping(Base):
 
     cauth_id = Column(Integer, primary_key=True)
     # The IDP auth endpoint should be unique
-    domain = Column(String(MAX_URL_LEN))
+    domain = Column(String(MAX_BLOB_LEN))
     # we cannot be sure every IdP will provide a numeric uid so go with String
     # and just to be sure, a huge one
-    external_id = Column(String(MAX_URL_LEN))
+    external_id = Column(String(MAX_BLOB_LEN))
+    username = Column(String(MAX_BLOB_LEN))
 
 
-def get_or_create_authenticated_user(domain, external_id):
+def get_or_create_authenticated_user(domain, external_id, username):
     filtering = {}
     if domain:
         filtering['domain'] = domain
@@ -92,10 +95,29 @@ def get_or_create_authenticated_user(domain, external_id):
         filtering['external_id'] = external_id
     try:
         user = Session.query(auth_mapping).filter_by(**filtering).one()
+        # update the external username, in case it changed
+        # TODO make sure it is supported correctly in managesf
+        user.username = username
+        Session.add(user)
+        Session.commit()
         return user.cauth_id
     except NoResultFound:
+        if username:
+            # find potential conflicts
+            filtering = {'username': username}
+            try:
+                u = Session.query(auth_mapping).filter_by(**filtering).one()
+                raise exceptions.UsernameConflictException(
+                    message='',
+                    external_auth_details={'domain': u.domain,
+                                           'external_id': u.external_id,
+                                           'username': username}
+                )
+            except NoResultFound:
+                pass
         user = auth_mapping(domain=domain,
-                            external_id=external_id)
+                            external_id=external_id,
+                            username=username or '')
         Session.add(user)
         Session.commit()
         return user.cauth_id
