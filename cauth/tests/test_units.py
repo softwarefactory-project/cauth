@@ -21,9 +21,9 @@ from M2Crypto import RSA, BIO
 from webtest import TestApp
 from pecan import load_app
 
-from cauth.utils import common
+from cauth.utils import common, exceptions
 from cauth.tests.common import dummy_conf, FakeResponse, githubmock_request
-from cauth.model.db import API_KEY_LEN
+from cauth.model import db
 
 import os
 
@@ -170,6 +170,25 @@ class TestCauthApp(FunctionalTest):
                                               status="*")
             self.assertEqual(response.status_int, 401)
 
+    def test_username_already_registered(self):
+        """Test that username collisions result in a 401 response"""
+        payload = {'method': 'Password',
+                   'back': 'r/',
+                   'args': {'username': 'user_collide',
+                            'password': 'userpass'}, }
+        gcau = 'cauth.model.db.get_or_create_authenticated_user'
+        with patch(gcau) as g, patch('requests.get'):
+            g.side_effect = exceptions.UsernameConflictException(
+                message="",
+                external_auth_details={'domain': 'SOME_DOMAIN',
+                                       'external_id': 'SOMEID',
+                                       'username': 'user_collide'})
+            response = self.app.post_json('/login',
+                                          payload,
+                                          status="*")
+        self.assertEqual(response.status_int, 401)
+        self.assertTrue("SOME_DOMAIN" in response.text, response)
+
     def test_unknown_auth_method_login(self):
         """Test rejection upon trying to authenticate with an unknown method"""
         payload = {'method': 'ErMahGerd',
@@ -291,7 +310,7 @@ class TestCauthApp(FunctionalTest):
                                 key_create.json)
                 api_key = key_create.json['api_key']
                 # let's check the API key out
-                self.assertEqual(API_KEY_LEN,
+                self.assertEqual(db.API_KEY_LEN,
                                  len(api_key),
                                  api_key)
                 pool = string.ascii_letters + string.digits

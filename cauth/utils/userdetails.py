@@ -46,6 +46,7 @@ class UserDetailsCreator:
             if external_info.get('domain') == 'CAUTH_API_KEY':
                 c_id = external_info['external_id']
             else:
+                external_info['username'] = user['login']
                 c_id = auth_map.get_or_create_authenticated_user(
                     **external_info)
             del user['external_auth']
