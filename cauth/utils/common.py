@@ -20,8 +20,8 @@ import time
 import urllib
 
 from M2Crypto import RSA
-from pecan import response, conf
-from cauth.utils import userdetails
+from pecan import response, conf, render
+from cauth.utils import userdetails, exceptions
 
 
 LOGOUT_MSG = "You have been successfully logged " \
@@ -58,7 +58,19 @@ def pre_register_user(user):
 
 
 def setup_response(user, back):
-    c_id = pre_register_user(user)
+    try:
+        c_id = pre_register_user(user)
+    except exceptions.UsernameConflictException as e:
+        response.status_code = 401
+        msg = ('Error: this username is already registered with a '
+               'different Identity Provider (%s - uid: %s).<br />'
+               'Please contact an administrator.')
+        msg = msg % (e.external_auth_details['domain'],
+                     e.external_auth_details['external_id'])
+        response.body = render('login.html',
+                               dict(back=back,
+                                    message=msg))
+        return
     # c_id is added to the cauth cookie so that the storyboard client can
     # authenticate to storyboard_api.
     # the c_id is stored in browser local storage after authentication.

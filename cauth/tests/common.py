@@ -166,7 +166,12 @@ class dummy_conf():
                       {"lastname": "Demo user1",
                        "mail": "user1@tests.dom",
                        "password": crypt.crypt("userpass",
-                                               "$6$EFeaxATWohJ")}},
+                                               "$6$EFeaxATWohJ")},
+                      "user_collide":
+                      {"lastname": "user collision",
+                       "mail": "user_collide@tests.dom",
+                       "password": crypt.crypt("userpass",
+                                               "$6$EFeaxATWohJ")}, },
                      'localdb':
                      {"managesf_url": "http://tests.dom", },
                      'openid':
