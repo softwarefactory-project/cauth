@@ -24,6 +24,8 @@ from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.exc import NoResultFound
 
+from cauth.utils import exceptions
+
 
 Base = declarative_base()
 Session = scoped_session(sessionmaker())
@@ -82,9 +84,10 @@ class auth_mapping(Base):
     # we cannot be sure every IdP will provide a numeric uid so go with String
     # and just to be sure, a huge one
     external_id = Column(String(MAX_URL_LEN))
+    username = Column(String(MAX_URL_LEN))
 
 
-def get_or_create_authenticated_user(domain, external_id):
+def get_or_create_authenticated_user(domain, external_id, username=None):
     filtering = {}
     if domain:
         filtering['domain'] = domain
@@ -92,10 +95,29 @@ def get_or_create_authenticated_user(domain, external_id):
         filtering['external_id'] = external_id
     try:
         user = Session.query(auth_mapping).filter_by(**filtering).one()
+        # update the external username, in case it changed
+        # TODO make sure it is supported correctly in managesf
+        user.username = username
+        Session.add(user)
+        Session.commit()
         return user.cauth_id
     except NoResultFound:
+        if username:
+            # find potential conflicts
+            filtering = {'username': username}
+            try:
+                Session.query(auth_mapping).filter_by(**filtering).one()
+                raise exceptions.UsernameConflictException(
+                    message='',
+                    external_auth_details={'domain': domain,
+                                           'external_id': external_id,
+                                           'username': username}
+                )
+            except NoResultFound:
+                pass
         user = auth_mapping(domain=domain,
-                            external_id=external_id)
+                            external_id=external_id,
+                            username=username or '')
         Session.add(user)
         Session.commit()
         return user.cauth_id
