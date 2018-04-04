@@ -95,26 +95,43 @@ def get_or_create_authenticated_user(domain, external_id, username):
         filtering['external_id'] = external_id
     try:
         user = Session.query(auth_mapping).filter_by(**filtering).one()
-        # update the external username, in case it changed
+        # we found our user, but if her username changed on the IdP (bad but
+        # possible) we need to make sure there isn't a different user with
+        # that username already:
+        filtering = {'username': username}
+        try:
+            u = Session.query(auth_mapping).filter_by(**filtering).one()
+            if u.domain != domain or u.external_id != str(external_id):
+                # We have that username registered with another IdP, so
+                # raise
+                raise exceptions.UsernameConflictException(
+                    message='',
+                    external_auth_details={'domain': u.domain,
+                                           'external_id': u.external_id,
+                                           'username': username})
+        except NoResultFound:
+            pass
+        # we're safe, and update the external username, in case it changed
         # TODO make sure it is supported correctly in managesf
         user.username = username
         Session.add(user)
         Session.commit()
         return user.cauth_id
     except NoResultFound:
-        if username:
-            # find potential conflicts
-            filtering = {'username': username}
-            try:
-                u = Session.query(auth_mapping).filter_by(**filtering).one()
-                raise exceptions.UsernameConflictException(
-                    message='',
-                    external_auth_details={'domain': u.domain,
-                                           'external_id': u.external_id,
-                                           'username': username}
-                )
-            except NoResultFound:
-                pass
+        # it's the user's first time authentication from this IdP, again
+        # let's check if the username is already taken in cauth
+        filtering = {'username': username}
+        try:
+            u = Session.query(auth_mapping).filter_by(**filtering).one()
+            # username already registered, raise
+            raise exceptions.UsernameConflictException(
+                message='',
+                external_auth_details={'domain': u.domain,
+                                       'external_id': u.external_id,
+                                       'username': username}
+            )
+        except NoResultFound:
+            pass
         user = auth_mapping(domain=domain,
                             external_id=external_id,
                             username=username or '')
