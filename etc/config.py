@@ -49,6 +49,12 @@ logging = {
 
 # Authorization configurations
 auth = {
+    # if several Identity Providers are used, there might be login collisions.
+    # Set strategy to "FORBID" to prevent users to login with an id already
+    # registered to another Identity Provider
+    # Set strategy to "DIFFERENTIATE" to allow login with a slightly modified
+    # login, based on the hash of the domain id + IdP uid.
+    'login_collision_strategy': "FORBID",
     'ldap': {
         'host': 'my.ldap.url',
         'dn': 'uid=%(username)s,ou=test,dc=corp',
