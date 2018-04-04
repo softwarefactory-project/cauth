@@ -21,14 +21,18 @@ from M2Crypto import RSA, BIO
 from webtest import TestApp
 from pecan import load_app
 
+from cauth.auth import dummies
 from cauth.utils import common, exceptions
+from cauth.utils.userdetails import differentiate
 from cauth.tests.common import dummy_conf, FakeResponse, githubmock_request
 from cauth.model import db
 
 import os
+import pkg_resources
 
 import httmock
 import urlparse
+import urllib2
 
 
 def raise_(ex):
@@ -416,3 +420,81 @@ class TestCauthApp(FunctionalTest):
         self.assertEqual(response.status_int, 303)
         self.assertEqual('http://localhost/r/', response.headers['Location'])
         self.assertIn('Set-Cookie', response.headers)
+
+
+# Here we inject our dummy auth plugins in the namespace
+d = pkg_resources.Distribution(__file__)
+base_path = 'cauth.auth.dummies'
+ep_map = {'cauth.authentication': {}}
+for plugin_name, plugin_class in [('spock', 'SpockAuth'),
+                                  ('evilspock', 'EvilSpockAuth')]:
+    ep = pkg_resources.EntryPoint.parse(
+        '%s = %s:%s' % (plugin_name, base_path, plugin_class))
+    ep_map['cauth.authentication'].update({plugin_name: ep})
+d._ep_map = ep_map
+# Add the fake distribution to the global working_set
+pkg_resources.working_set.add(d)
+
+
+class TestCollisionStrategies(TestCase):
+    def app_setup(self, strategy):
+        c = dummy_conf()
+        c.auth['spock'] = {}
+        c.auth['evilspock'] = {}
+        c.auth['login_collision_strategy'] = strategy
+        config = {'managesf': c.managesf,
+                  'app': c.app,
+                  'auth': c.auth,
+                  'services': c.services,
+                  'sqlalchemy': c.sqlalchemy}
+        gen_rsa_key()
+        app = TestApp(load_app(config))
+        return app
+
+    def test_FORBID(self):
+        app = self.app_setup("FORBID")
+        with patch('requests.get'), patch('requests.post'):
+            response = app.post_json('/login',
+                                     {'method': 'spock',
+                                      'back': 'r/',
+                                      'args': {}})
+            self.assertEqual(response.status_int, 303)
+            response = app.post_json('/login',
+                                     {'method': 'evilspock',
+                                      'back': 'r/',
+                                      'args': {}},
+                                     status='*')
+            # Assert that the error message contains info about the existing
+            # user, no auth cookie set
+            self.assertNotIn('Set-Cookie', response.headers)
+            self.assertIn(dummies.SpockAuth.domain,
+                          response.text, response)
+            self.assertIn(
+                dummies.SpockAuth.spock['external_auth']['external_id'],
+                response.text, response)
+
+    def test_DIFFERENTIATE(self):
+        app = self.app_setup("DIFFERENTIATE")
+        with patch('requests.get'), patch('requests.post'):
+            response = app.post_json('/login',
+                                     {'method': 'spock',
+                                      'back': 'r/',
+                                      'args': {}})
+            self.assertEqual(response.status_int, 303)
+            response = app.post_json('/login',
+                                     {'method': 'evilspock',
+                                      'back': 'r/',
+                                      'args': {}},
+                                     status='*')
+            self.assertEqual(response.status_int, 303, response)
+            auth_tkt = response.headers['Set-Cookie'].split(';')[0]
+            cookie = auth_tkt.split('=')[-1]
+            cookie_fields = urllib2.unquote(cookie).split(';')
+            cookie = dict(x.split('=', 1) for x in cookie_fields)
+            diff = differentiate(
+                dummies.EvilSpockAuth.spock['login'],
+                dummies.EvilSpockAuth.domain,
+                dummies.EvilSpockAuth.spock['external_auth']['external_id'])
+            self.assertEqual(diff,
+                             cookie['uid'],
+                             cookie)

@@ -14,14 +14,23 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import hashlib
 import logging
 
 from stevedore import driver
+from pecan import conf
 
 from cauth.service import base
 from cauth.model import db as auth_map
+from cauth.utils import exceptions
+
 
 logger = logging.getLogger(__name__)
+
+
+def differentiate(login, domain, uid):
+    suffix = hashlib.sha1((domain + '/' + str(uid)).encode()).hexdigest()
+    return login + '_' + suffix[:6]
 
 
 class UserDetailsCreator:
@@ -47,8 +56,34 @@ class UserDetailsCreator:
                 c_id = external_info['external_id']
             else:
                 external_info['username'] = user['login']
-                c_id = auth_map.get_or_create_authenticated_user(
-                    **external_info)
+                try:
+                    c_id = auth_map.get_or_create_authenticated_user(
+                        **external_info)
+                except exceptions.UsernameConflictException as e:
+                    strategy = conf.auth.get('login_collision_strategy')
+                    if strategy == 'DIFFERENTIATE':
+                        msg = ('login "%s" already registered for domain '
+                               '%s, uid %s, differentiating login as %s')
+                        old_login = user['login']
+                        user['login'] = differentiate(
+                            user['login'],
+                            external_info.get('domain', ''),
+                            external_info['external_id'])
+                        external_info['username'] = user['login']
+                        msg = msg % (old_login,
+                                     e.external_auth_details['domain'],
+                                     e.external_auth_details['external_id'],
+                                     user['login'],)
+                        logger.info(msg)
+                        c_id = auth_map.get_or_create_authenticated_user(
+                            **external_info)
+                    elif strategy == 'FORBID':
+                            raise
+                    else:
+                        msg = ('Incorrect login collision strategy '
+                               '"%s", defaulting to "FORBID"')
+                        logger.info(msg % strategy)
+                        raise
             del user['external_auth']
             user['external_id'] = c_id
         for service in self.services:
