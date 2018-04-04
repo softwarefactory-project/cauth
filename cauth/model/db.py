@@ -95,6 +95,19 @@ def get_or_create_authenticated_user(domain, external_id, username):
         filtering['external_id'] = external_id
     try:
         user = Session.query(auth_mapping).filter_by(**filtering).one()
+        # make sure we have a unique username
+        if username:
+            filtering = {'username': username}
+            try:
+                u = Session.query(auth_mapping).filter_by(**filtering).one()
+                if u.domain != domain or u.external_id != str(external_id):
+                    raise exceptions.UsernameConflictException(
+                        message='',
+                        external_auth_details={'domain': u.domain,
+                                               'external_id': u.external_id,
+                                               'username': username})
+            except NoResultFound:
+                pass
         # update the external username, in case it changed
         # TODO make sure it is supported correctly in managesf
         user.username = username
