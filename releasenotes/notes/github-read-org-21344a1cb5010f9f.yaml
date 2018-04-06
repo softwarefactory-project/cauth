@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    The GitHub OAuth application doesn't request organization read access when
+    the allowed_organizations restriction is not set.
