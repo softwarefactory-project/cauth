@@ -198,7 +198,7 @@ class TestCauthApp(FunctionalTest):
                 self.assertEqual('github.com', parsed.netloc)
                 self.assertEqual('/login/oauth/authorize', parsed.path)
                 self.assertEqual(
-                    ['user:email, read:public_key, read:org'],
+                    ['user:email, read:public_key'],
                     parsed_qs.get('scope'))
                 self.assertEqual(
                     ['http://tests.dom/auth/login/oauth2/callback"'],
@@ -219,7 +219,7 @@ class TestCauthApp(FunctionalTest):
                 self.assertEqual('github.com', parsed.netloc)
                 self.assertEqual('/login/oauth/authorize', parsed.path)
                 self.assertEqual(
-                    ['user:email, read:public_key, read:org'],
+                    ['user:email, read:public_key'],
                     parsed_qs.get('scope'))
                 self.assertEqual(
                     ['http://tests.dom/auth/login/oauth2/callback"'],
