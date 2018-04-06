@@ -32,6 +32,12 @@ class BaseGithubAuthPlugin(base.AuthProtocolPlugin):
     _config_section = "github"
     auth_url = 'https://github.com/login/oauth/authorize'
 
+    def __init__(self, conf):
+        super(BaseGithubAuthPlugin, self).__init__(conf)
+        self.scope = 'user:email, read:public_key'
+        if self.conf.get('allowed_organizations'):
+            self.scope += ', read:org'
+
     def organization_allowed(self, token):
         allowed_orgs = self.conf.get('allowed_organizations')
         if allowed_orgs:
@@ -117,7 +123,6 @@ class GithubAuthPlugin(BaseGithubAuthPlugin,
 
     provider = "Github"
 
-    scope = 'user:email, read:public_key, read:org'
     access_token_url = 'https://github.com/login/oauth/access_token'
 
     def get_user_orgs(self, token):
