@@ -1,0 +1,8 @@
+Code-Review+2: Matthieu Huin <mhuin@redhat.com>
+Workflow+1: Tristan de Cacqueray <tdecacqu@redhat.com>
+Verified+2: Zuul CI <zuul@softwarefactory-project.io>
+Submitted-by: Zuul CI <zuul@softwarefactory-project.io>
+Submitted-at: Mon, 09 Apr 2018 10:28:19 +0000
+Reviewed-on: https://softwarefactory-project.io/r/11805
+Project: software-factory/cauth
+Branch: refs/heads/master
