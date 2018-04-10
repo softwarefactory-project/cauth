@@ -175,7 +175,14 @@ class dummy_conf():
                      {"managesf_url": "http://tests.dom", },
                      'openid':
                      {"redirect_uri": "auth/login/openid/callback",
-                      'auth_url': 'https://my.openid.provider/+openid', }, }
+                      'auth_url': 'https://my.openid.provider/+openid', },
+                     'SAML2':
+                     {'key_delimiter': ':',
+                      'mapping': {'login': 'MELLON_login',
+                                  'fullname': 'MELLON_fullname',
+                                  'email': 'MELLON_email',
+                                  'uid': 'MELLON_uid',
+                                  'ssh_keys': 'MELLON_keys'}}, }
         self.sqlalchemy = {'url': 'sqlite:///%s' % tempfile.mkstemp()[1],
                            'echo': False,
                            'encoding': 'utf-8',

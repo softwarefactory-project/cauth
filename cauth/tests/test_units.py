@@ -253,7 +253,8 @@ class TestCauthApp(FunctionalTest):
                               'Github',
                               'GithubPersonalAccessToken',
                               'OpenID',
-                              'APIKey']),
+                              'APIKey',
+                              'SAML2']),
                          set(response['service']['auth_methods']))
 
     def test_api_key_crud_flow(self):
@@ -361,6 +362,44 @@ class TestCauthApp(FunctionalTest):
                 payload['args'] = {'api_key': api_key}
                 response = self.app.post_json('/login',
                                               payload)
+        self.assertEqual(response.status_int, 303)
+        self.assertEqual('http://localhost/r/', response.headers['Location'])
+        self.assertIn('Set-Cookie', response.headers)
+
+    def test_saml2_login(self):
+        to_patch = 'cauth.utils.userdetails.UserDetailsCreator.create_user'
+        payload = {'method': 'SAML2',
+                   'back': '/r/',
+                   'args': {}, }
+        with patch(to_patch) as cu:
+            cu.return_value = 123
+            saml_env = {'MELLON_login': 'wanpanman',
+                        'MELLON_fullname': 'Caped Baldy',
+                        'MELLON_email': 'swole@hero.org',
+                        'MELLON_uid': '123456789',
+                        'MELLON_keys': 'xxx:yyy:zzz',
+                        'HTTP_REFERER': 'http://monster.org/idp'}
+            response = self.app.post_json('/login/SAML2/',
+                                          payload,
+                                          extra_environ=saml_env)
+            cu_args, cu_kwargs = cu.call_args
+            self.assertEqual(1, len(cu_args))
+            saitama = cu_args[0]
+            self.assertEqual('wanpanman', saitama.get('login'), saitama)
+            self.assertEqual('swole@hero.org', saitama.get('email'), saitama)
+            self.assertEqual('Caped Baldy', saitama.get('name'), saitama)
+            self.assertEqual('swole@hero.org', saitama.get('email'), saitama)
+            self.assertEqual(
+                '123456789',
+                saitama.get('external_auth', {}).get('external_id'),
+                saitama)
+            self.assertEqual(
+                'monster.org',
+                saitama.get('external_auth', {}).get('domain'),
+                saitama)
+            self.assertTrue(len(saitama.get('ssh_keys', [])) > 0, saitama)
+            for key in [u['key'] for u in saitama['ssh_keys']]:
+                self.assertTrue(key in ['xxx', 'yyy', 'zzz'], saitama)
         self.assertEqual(response.status_int, 303)
         self.assertEqual('http://localhost/r/', response.headers['Location'])
         self.assertIn('Set-Cookie', response.headers)

@@ -22,7 +22,7 @@ from pecan.rest import RestController
 
 from cauth.auth import base as exceptions
 from cauth.controllers import base, github, introspection, openid, oauth2
-from cauth.controllers import apikey, openid_connect
+from cauth.controllers import apikey, openid_connect, SAML2
 from cauth.utils.common import LOGOUT_MSG
 
 
@@ -54,6 +54,10 @@ class RootController(object):
         logger.error("%s - skipping callback endpoint" % e.message)
     try:
         login.openid_connect = openid_connect.OpenIDConnectController()
+    except exceptions.AuthProtocolNotAvailableError as e:
+        logger.error("%s - skipping callback endpoint" % e.message)
+    try:
+        login.SAML2 = SAML2.SAML2Controller()
     except exceptions.AuthProtocolNotAvailableError as e:
         logger.error("%s - skipping callback endpoint" % e.message)
     about = introspection.IntrospectionController()
