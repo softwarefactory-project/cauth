@@ -92,7 +92,18 @@ auth = {
     },
     'keystone': {
         'auth_url': 'http://keystone.server:5000',
+    },
+    'SAML2': {
+        'key_delimiter': ',',
+        'mapping': {
+            'login': 'MELLON_idp_username',
+            'email': 'MELLON_urn:oid:1.2.840.113549.1.9.1',
+            'fullname': 'MELLON_urn:oid:2.5.4.42',
+            'ssh_keys': 'MELLON_ssh_public_key',
+            'uid': 'MELLON_idp_ID',
+        }
     }
+
 }
 
 logout = {
