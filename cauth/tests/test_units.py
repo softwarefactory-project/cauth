@@ -35,12 +35,6 @@ def raise_(ex):
     raise ex
 
 
-def redmine_create_user_mock(*args, **kwargs):
-    assert 'data' in kwargs
-    assert 'X-Redmine-API-Key' in kwargs['headers']
-    return FakeResponse(200)
-
-
 def gen_rsa_key():
     conf = dummy_conf()
     if not os.path.isfile(conf.app['priv_key_path']):

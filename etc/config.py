@@ -29,8 +29,6 @@ logging = {
     'loggers': {
         'cauth': {'level': 'DEBUG',
                   'handlers': ['file_handler']},
-        'pysflib': {'level': 'DEBUG',
-                    'handlers': ['file_handler']},
         '__force_dict__': True
     },
     'handlers': {
@@ -98,13 +96,10 @@ auth = {
 }
 
 logout = {
-    'services': ['redmine', 'gerrit', 'cauth'],
+    'services': ['gerrit', 'cauth'],
     'gerrit': {
         'url': '/r/logout'
     },
-    'redmine': {
-        'url': '/redmine/logout'
-    }
 }
 
 sqlalchemy = {
@@ -114,12 +109,6 @@ sqlalchemy = {
 }
 
 services = ['managesf', ]
-
-redmine = {
-    'apihost': 'redmine_api_host',
-    'apiurl': '',
-    'apikey': '',
-}
 
 gerrit = {
     'url': 'http://gerrit.url/r/',

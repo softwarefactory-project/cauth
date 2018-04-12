@@ -46,34 +46,3 @@ Add the following section to cauth's config.py:
 * **db_host** is the network address of the gerrit mysql backend
 * **db_name** is the name of the database used by gerrit
 * **db_user** and **db_password** are the credentials used by gerrit with the database
-
-Redmine
--------
-
-Redmine is a free and open source, web-based project management and issue
-tracking tool.
-
-Configuration
-.............
-
-You need to install the `redmine_http_auth plugin <https://github.com/AdamLantos/redmine_http_auth>`_.
-
-Once it is installed, enable the HTTP authentication in the settings page of the
-plugin menu.
-
-on cauth
-,,,,,,,,
-
-Add the following section to cauth's config.py:
-
-.. code-block:: python
-
-  redmine = {
-    'apihost': 'redmine_api_host',
-    'apiurl': '',
-    'apikey': '',
-  }
-
-* **apihost** is the redmine API host,
-* **apiurl** is the redmine API URL endpoint,
-* **apikey** is the API key to use to perform user management on redmine
