@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a50d1a3_a20e9ae3",
+        "filename": "cauth/model/db.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-04-13T11:12:12Z",
+      "side": 1,
+      "message": "Could be more generic name and then less misleading.",
+      "range": {
+        "startLine": 87,
+        "startChar": 29,
+        "endLine": 87,
+        "endChar": 41
+      },
+      "revId": "c400ebb8599d3c8f682a23173631eaf321755d30",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a50d1a3_c213a60c",
+        "filename": "cauth/model/db.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-04-13T11:12:12Z",
+      "side": 1,
+      "message": "Should it be logged in cauth log ?",
+      "revId": "c400ebb8599d3c8f682a23173631eaf321755d30",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a50d1a3_62f972c8",
+        "filename": "cauth/utils/common.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-04-13T11:12:12Z",
+      "side": 1,
+      "message": "Isn\u0027t it only the pre_register_user that need to be protected wit UsernameConflictException ? Why all this block ?",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 68
+      },
+      "revId": "c400ebb8599d3c8f682a23173631eaf321755d30",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
