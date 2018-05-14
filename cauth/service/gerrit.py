@@ -17,7 +17,7 @@
 import json
 import logging
 
-import MySQLdb
+import pymysql
 import requests
 
 from cauth.service import base
@@ -48,7 +48,7 @@ class GerritServicePlugin(base.BaseServicePlugin):
 
     def add_account_as_external(self, account_id, username):
         # TODO(mhu) there's got to be a cleaner way. pygerrit ?
-        db = MySQLdb.connect(passwd=self.conf['db_password'],
+        db = pymysql.connect(passwd=self.conf['db_password'],
                              db=self.conf['db_name'],
                              host=self.conf['db_host'],
                              user=self.conf['db_user'])

@@ -86,11 +86,11 @@ class TestGerritPlugin(TestCase):
             name='gerrit',
             invoke_on_load=True,
             invoke_args=(self.conf,)).driver
-        with patch('cauth.service.gerrit.MySQLdb') as m:
+        with patch('cauth.service.gerrit.pymysql') as m:
             m.connect = lambda *args, **kwargs: FakeDB()
             ret = ger.add_account_as_external(42, 'john')
         self.assertEqual(True, ret)
-        with patch('cauth.service.gerrit.MySQLdb') as m:
+        with patch('cauth.service.gerrit.pymysql') as m:
             m.connect = lambda *args, **kwargs: FakeDB(False)
             ret = ger.add_account_as_external(42, 'john')
         self.assertEqual(False, ret)
