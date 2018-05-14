@@ -23,6 +23,8 @@ from cauth.model.db import reset, Base, Session
 def create_from_conf():
     configs = dict(conf.sqlalchemy)
     url = configs.pop('url')
+    if url.startswith('mysql://'):
+        url = url.replace('mysql://', 'mysql+pymysql://')
     return create_engine(url, pool_recycle=600, **configs)
 
 
