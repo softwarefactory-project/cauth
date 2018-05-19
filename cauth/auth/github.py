@@ -149,7 +149,7 @@ class GithubAuthPlugin(BaseGithubAuthPlugin,
         resp = requests.get("https://api.github.com/user",
                             headers=headers)
         if not resp.ok:
-            logger.error('Failed to authenticate', resp)
+            logger.error('Failed to authenticate')
             raise base.UnauthenticatedError(resp)
         data = resp.json()
         login = data.get('login')
@@ -158,7 +158,7 @@ class GithubAuthPlugin(BaseGithubAuthPlugin,
         resp = requests.get("https://api.github.com/users/%s/keys" % login,
                             headers=headers)
         if not resp.ok:
-            logger.error('Failed to get keys', resp)
+            logger.error('Failed to get keys')
             raise base.UnauthenticatedError(resp)
         ssh_keys = resp.json()
 
@@ -168,7 +168,7 @@ class GithubAuthPlugin(BaseGithubAuthPlugin,
         resp = requests.get("https://api.github.com/user/emails",
                             headers=headers)
         if not resp.ok:
-            logger.error('Failed to get emails', resp)
+            logger.error('Failed to get emails')
             raise base.UnauthenticatedError(resp)
         emails = resp.json()
 
