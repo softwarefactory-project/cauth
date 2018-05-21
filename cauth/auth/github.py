@@ -179,12 +179,14 @@ class GithubAuthPlugin(BaseGithubAuthPlugin,
             if mail.get('primary') is True:
                 email = mail.get('email')
                 break
+        emails = [e['email'] for e in emails if e.get('verified')]
 
         logger.info(
             'Client %s (%s) authenticated through Github'
             % (login, email))
         return {'login': login,
                 'email': email,
+                'emails': emails,
                 'name': name,
                 'ssh_keys': ssh_keys,
                 'external_auth': {'domain': self.get_domain(),
