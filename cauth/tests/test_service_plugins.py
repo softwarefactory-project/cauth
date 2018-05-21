@@ -152,3 +152,37 @@ class TestGerritPlugin(TestCase):
                                     data=data,
                                     headers=headers,
                                     cookies=cookie)
+
+    def test_create_repoxplorer_user(self):
+        msf = driver.DriverManager(
+            namespace='cauth.service',
+            name='repoxplorer',
+            invoke_on_load=True,
+            invoke_args=(self.conf,)).driver
+
+        patches = [patch('cauth.service.managesf.requests.get'),
+                   patch('cauth.service.managesf.requests.put'),
+                   patch('cauth.service.managesf.requests.post'), ]
+        with nested(*patches) as (get, put, post):
+            get.side_effect = lambda *args, **kwargs: FakeResponse(404)
+            msf.register_new_user({'login': 'john',
+                                   'email': 'john@tests.dom',
+                                   'emails': ['john@tests.dom'],
+                                   'name': 'John Doe',
+                                   'ssh_keys': [],
+                                   'external_id': 42})
+            self.assertTrue(put.called)
+            self.assertFalse(post.called)
+
+            put.reset_mock()
+            post.reset_mock()
+
+            get.side_effect = lambda *args, **kwargs: FakeResponse(201)
+            msf.register_new_user({'login': 'john',
+                                   'email': 'john@tests.dom',
+                                   'emails': ['john@tests.dom'],
+                                   'name': 'John Doe',
+                                   'ssh_keys': [],
+                                   'external_id': 42})
+            self.assertFalse(put.called)
+            self.assertTrue(post.called)

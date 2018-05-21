@@ -432,6 +432,7 @@ class TestGithubAuthPlugin(BaseTestAuthPlugin):
                         'calling_back': True}
         expected = {'login': 'user6',
                     'email': 'user6@tests.dom',
+                    'emails': [],
                     'name': 'Demo user6',
                     'ssh_keys': {'key': ''},
                     'external_auth': {'domain': self.driver.auth_url,

@@ -134,6 +134,9 @@ def githubmock_request(url, request):
 class dummy_conf():
     def __init__(self):
         self.managesf = {'url': 'http://managesf.tests.dom', }
+        self.repoxplorer = {
+            'url': 'http://repoxplorer.tests.dom',
+            'admin_token': 'admintoken'}
         self.gerrit = {'url': 'XXX',
                        'password': 'wxcvbn',
                        'register_user': True,
