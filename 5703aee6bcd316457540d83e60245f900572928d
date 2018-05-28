@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7a2fa921_b357cfc9",
+        "filename": "cauth/auth/github.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-05-28T11:27:32Z",
+      "side": 1,
+      "message": "yes",
+      "parentUuid": "7a2fa921_53bbdb0e",
+      "revId": "5703aee6bcd316457540d83e60245f900572928d",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a2fa921_f336a7b3",
         "filename": "cauth/service/repoxplorer.py",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-05-28T09:49:22Z",
       "side": 1,
       "message": "is the default arg necessary? is there an \"exotic\" structure in there?",
+      "revId": "5703aee6bcd316457540d83e60245f900572928d",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a2fa921_7372977e",
+        "filename": "cauth/service/repoxplorer.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-05-28T11:27:32Z",
+      "side": 1,
+      "message": "Yes and no, in gerrit and managesf cauth service you have the same piece of code. I guess that\u0027s for the test only ... I think there is an issue how data structured are compared. I had hard time to have unittest working for this one w/o success finally ended up with simpler test cases.",
+      "parentUuid": "7a2fa921_f336a7b3",
       "revId": "5703aee6bcd316457540d83e60245f900572928d",
       "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
       "unresolved": false
