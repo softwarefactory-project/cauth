@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a2fa921_53bbdb0e",
+        "filename": "cauth/auth/github.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 68
+      },
+      "writtenOn": "2018-05-28T09:49:22Z",
+      "side": 1,
+      "message": "Is the primary email listed in there as well?",
+      "revId": "5703aee6bcd316457540d83e60245f900572928d",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a2fa921_f336a7b3",
+        "filename": "cauth/service/repoxplorer.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 68
+      },
+      "writtenOn": "2018-05-28T09:49:22Z",
+      "side": 1,
+      "message": "is the default arg necessary? is there an \"exotic\" structure in there?",
+      "revId": "5703aee6bcd316457540d83e60245f900572928d",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
