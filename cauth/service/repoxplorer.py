@@ -40,8 +40,6 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
             {"email": email} for email in user.get("emails", [])]
         _user["emails"] = emails
 
-        data = json.dumps(_user, default=lambda o: o.__dict__)
-
         headers = {
             "Remote-User": "admin",
             "Content-type": "application/json",
@@ -57,8 +55,25 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
         else:
             mode = 'update'
             req = requests.post
+            puser = resp.json()
+            # Keep user defined name
+            _user["name"] = puser["name"]
+            # Detect email to add or to remove
+            prev_emails = set([e['email'] for e in puser['emails']])
+            new_emails = set([e['email'] for e in _user['emails']])
+            to_add = new_emails - prev_emails
+            to_del = prev_emails - new_emails
+            # Keep previous emails data, by amending with data from idp
+            _user["emails"] = []
+            for e in puser["emails"]:
+                if e['email'] in to_del:
+                    continue
+                _user["emails"].append(e)
+            for e in to_add:
+                _user["emails"].append({'email': e})
 
-        logger.debug('user %s to repoxplorer:'
+        data = json.dumps(_user, default=lambda o: o.__dict__)
+        logger.debug('Add user %s to repoxplorer:'
                      ' %s with payload: %s' % (mode, url, data))
         resp = req(url, data=data, headers=headers)
         logger.debug('repoxplorer responded with code: %s' % resp.status_code)
