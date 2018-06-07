@@ -177,7 +177,22 @@ class TestGerritPlugin(TestCase):
             put.reset_mock()
             post.reset_mock()
 
-            get.side_effect = lambda *args, **kwargs: FakeResponse(201)
+            puser = {
+                'uid': 'saboten',
+                'name': 'Cactus Saboten',
+                'default-email': 'saboten@domain1',
+                'emails': [
+                    {'email': 'saboten@domain1',
+                     'groups': [
+                        {'group': 'ugroup',
+                         'start-date': '2016-01-01',
+                         'end-date': '2016-01-09'}
+                         ]
+                     }
+                ]
+            }
+            get.side_effect = lambda *args, **kwargs: FakeResponse(
+                201, json.dumps(puser), True)
             msf.register_new_user({'login': 'john',
                                    'email': 'john@tests.dom',
                                    'emails': ['john@tests.dom'],
