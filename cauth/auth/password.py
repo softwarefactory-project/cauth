@@ -126,7 +126,12 @@ class ManageSFAuthPlugin(BasePasswordAuthPlugin):
     def authenticate(self, **auth_context):
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
-        bind_url = urllib.basejoin(self.conf['managesf_url'], '/manage/bind')
+        base_url = self.conf['managesf_url']
+        # Retro compatibility support
+        if ":20001" not in base_url:
+            bind_url = urllib.basejoin(base_url, '/manage/bind')
+        else:
+            bind_url = urllib.basejoin(base_url, '/bind')
         headers = {"Authorization": encode(username.encode('utf8'),
                                            password.encode('utf8'))}
         response = requests.get(bind_url, headers=headers)

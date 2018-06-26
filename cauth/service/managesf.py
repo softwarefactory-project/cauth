@@ -50,8 +50,13 @@ class ManageSFServicePlugin(base.BaseServicePlugin):
                  }
         data = json.dumps(_user, default=lambda o: o.__dict__)
 
-        headers = {"Content-type": "application/json"}
-        url = "%s/manage/services_users/" % self.conf['url']
+        headers = {"Content-type": "application/json",
+                   "X-Remote-User": "admin"}
+        base_url = self.conf['url']
+        if ":20001" not in base_url:
+            url = "%s/manage/services_users/" % base_url
+        else:
+            url = "%s/services_users/" % base_url
         # assuming the admin user is called admin
         validity = time.time() + orig_conf.app['cookie_period']
         ticket = create_ticket(uid='admin',
