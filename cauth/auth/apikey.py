@@ -55,9 +55,15 @@ class APIKeyAuthPlugin(base.AuthProtocolPlugin):
         if not cauth_id:
             raise base.UnauthenticatedError('API key not found')
         # fetch the user info from manageSF
-        url = urllib.basejoin(self.conf['url'],
-                              "/manage/services_users/?cauth_id=%s" % cauth_id)
-        headers = {"Content-type": "application/json"}
+        base_url = self.conf['url']
+        if ":20001" not in base_url:
+            url = urllib.basejoin(
+                base_url, "/manage/services_users/?cauth_id=%s" % cauth_id)
+        else:
+            url = urllib.basejoin(
+                base_url, "/services_users/?cauth_id=%s" % cauth_id)
+        headers = {"Content-type": "application/json",
+                   "X-Remote-User": "admin"}
         # short lived so that intercepting the cookie has limited impact
         validity = time.time() + 10
         ticket = create_ticket(uid='admin',
