@@ -146,7 +146,8 @@ class TestGerritPlugin(TestCase):
                                "ssh_keys": [],
                                'external_id': 42},
                               default=lambda o: o.__dict__)
-            headers = {"Content-type": "application/json"}
+            headers = {"Content-type": "application/json",
+                       "X-Remote-User": "admin"}
             cookie = {'auth_pubtkt': 'MAGICCOOKIE'}
             post.assert_called_with(url,
                                     data=data,
