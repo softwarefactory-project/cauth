@@ -54,11 +54,18 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
             self.conf["url"], urllib.quote_plus(user["login"]))
 
         # Check user already exists in the DB
-        resp = requests.get(url, headers=headers)
+        try:
+            resp = requests.get(url, headers=headers)
+        except Exception:
+            logger.info(
+                "Skip user %s registration, repoxplorer backend down" % (
+                    urllib.quote_plus(user["login"])))
+            return
+
         if resp.status_code == 404:
             mode = 'creation'
             req = requests.put
-        else:
+        elif resp.status_code == 200:
             mode = 'update'
             req = requests.post
             puser = resp.json()
@@ -77,11 +84,17 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
                 _user["emails"].append(e)
             for e in to_add:
                 _user["emails"].append({'email': e})
+        else:
+            logger.info(
+                "Skip user %s registration, repoxplorer backend down" % (
+                    urllib.quote_plus(user["login"])))
+            return
 
         data = json.dumps(_user, default=lambda o: o.__dict__)
         logger.debug('Add user %s to repoxplorer:'
                      ' %s with payload: %s' % (mode, url, data))
         resp = req(url, data=data, headers=headers)
+
         logger.debug('repoxplorer responded with code: %s' % resp.status_code)
 
     def set_api_key(self, user, key):

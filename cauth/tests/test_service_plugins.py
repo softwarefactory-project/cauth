@@ -192,7 +192,7 @@ class TestGerritPlugin(TestCase):
                 ]
             }
             get.side_effect = lambda *args, **kwargs: FakeResponse(
-                201, json.dumps(puser), True)
+                200, json.dumps(puser), True)
             msf.register_new_user({'login': 'john',
                                    'email': 'john@tests.dom',
                                    'emails': ['john@tests.dom'],
@@ -201,3 +201,16 @@ class TestGerritPlugin(TestCase):
                                    'external_id': 42})
             self.assertFalse(put.called)
             self.assertTrue(post.called)
+
+            put.reset_mock()
+            post.reset_mock()
+
+            get.side_effect = Exception('fake')
+            msf.register_new_user({'login': 'john',
+                                   'email': 'john@tests.dom',
+                                   'emails': ['john@tests.dom'],
+                                   'name': 'John Doe',
+                                   'ssh_keys': [],
+                                   'external_id': 42})
+            self.assertFalse(put.called)
+            self.assertFalse(post.called)
