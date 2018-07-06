@@ -55,11 +55,11 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
 
         # Check user already exists in the DB
         try:
-            resp = requests.get(url, headers=headers)
-        except Exception:
+            resp = requests.get(url, headers=headers, timeout=5)
+        except Exception as exc:
             logger.info(
-                "Skip user %s registration, repoxplorer backend down" % (
-                    urllib.quote_plus(user["login"])))
+                "Skip user %s registration, repoxplorer backend down (%s)" % (
+                    urllib.quote_plus(user["login"]), exc))
             return
 
         if resp.status_code == 404:
@@ -86,14 +86,20 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
                 _user["emails"].append({'email': e})
         else:
             logger.info(
-                "Skip user %s registration, repoxplorer backend down" % (
-                    urllib.quote_plus(user["login"])))
+                "Skip user %s registration, unexpected status code (%s)" % (
+                    urllib.quote_plus(user["login"]), resp.status_code))
             return
 
         data = json.dumps(_user, default=lambda o: o.__dict__)
         logger.debug('Add user %s to repoxplorer:'
                      ' %s with payload: %s' % (mode, url, data))
-        resp = req(url, data=data, headers=headers)
+        try:
+            resp = req(url, data=data, headers=headers, timeout=5)
+        except Exception as exc:
+            logger.info(
+                "Skip user %s registration, repoxplorer backend down (%s)" % (
+                    urllib.quote_plus(user["login"]), exc))
+            return
 
         logger.debug('repoxplorer responded with code: %s' % resp.status_code)
 
