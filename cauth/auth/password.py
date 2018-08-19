@@ -134,7 +134,11 @@ class ManageSFAuthPlugin(BasePasswordAuthPlugin):
         if response.status_code > 399:
             logger.error('localdb auth failed: %s' % response)
             raise base.UnauthenticatedError(response)
-        infos = response.json()
+        try:
+            infos = response.json()
+        except Exception:
+            logger.error("couldn't decode managesf response: %s" % response)
+            raise base.UnauthenticatedError(response)
         return {'login': username,
                 'email': infos['email'],
                 'name': infos['fullname'],
