@@ -50,6 +50,8 @@ class BaseServicePlugin(object):
     def register_new_user(self, user):
         """Called at login, to register the user if it is her first time
         using the service.
+        Returns a dictionary of data pertaining to the service to add to the
+        auth ticket if necessary.
         :param user: a dictionary containing the user's properties"""
         raise NotImplementedError
 

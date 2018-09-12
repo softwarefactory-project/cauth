@@ -206,6 +206,10 @@ class dummy_conf():
                                 'format': (
                                     '%(asctime)s %(levelname)-5.5s [%(name)s]'
                                     '[%(threadName)s] %(message)s')}}}
+        self.zuul = {'JWTsecret': 'SuperDuperSaiyan',
+                     'JWTalgorithm': 'HS256',
+                     'default_tenant': 'local',
+                     'default_canonical_name': 'tests.dom', }
 
     def __getitem__(self, key):
         return getattr(self, key, None)
