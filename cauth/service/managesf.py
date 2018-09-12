@@ -61,3 +61,5 @@ class ManageSFServicePlugin(base.BaseServicePlugin):
         resp = requests.post(url, data=data, headers=headers,
                              cookies=cookie)
         logger.debug('managesf responded with code: %s' % resp.status_code)
+        # TODO plug ACL info retrieval
+        return {}

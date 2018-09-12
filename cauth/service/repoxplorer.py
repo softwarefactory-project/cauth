@@ -60,7 +60,7 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
             logger.info(
                 "Skip user %s registration, repoxplorer backend down (%s)" % (
                     urllib.quote_plus(user["login"]), exc))
-            return
+            return {}
 
         if resp.status_code == 404:
             mode = 'creation'
@@ -88,7 +88,7 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
             logger.info(
                 "Skip user %s registration, unexpected status code (%s)" % (
                     urllib.quote_plus(user["login"]), resp.status_code))
-            return
+            return {}
 
         data = json.dumps(_user, default=lambda o: o.__dict__)
         logger.debug('Add user %s to repoxplorer:'
@@ -99,9 +99,10 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
             logger.info(
                 "Skip user %s registration, repoxplorer backend down (%s)" % (
                     urllib.quote_plus(user["login"]), exc))
-            return
+            return {}
 
         logger.debug('repoxplorer responded with code: %s' % resp.status_code)
+        return {}
 
     def set_api_key(self, user, key):
         pass
