@@ -131,6 +131,24 @@ class TestCauthApp(FunctionalTest):
             self.assertEqual(response.status_int, 401,
                              response.body)
 
+    def test_extra_tkt_data(self):
+        """Test passing login info as a JSON payload"""
+        payload = {'method': 'Password',
+                   'back': 'r/',
+                   'args': {'username': 'user1',
+                            'password': 'userpass'}, }
+        reg = 'cauth.service.managesf.ManageSFServicePlugin.register_new_user'
+        with patch(reg) as reg:
+            with patch('requests.get'):
+                reg.return_value = {'jwt': 'aaaa'}
+                response = self.app.post_json('/login',
+                                              payload)
+        self.assertEqual(response.status_int, 303)
+        self.assertEqual('http://localhost/r/', response.headers['Location'])
+        self.assertIn('Set-Cookie', response.headers)
+        self.assertTrue('jwt' in response.headers['Set-Cookie'],
+                        response.headers['Set-Cookie'])
+
     def test_json_password_login(self):
         """Test passing login info as a JSON payload"""
         payload = {'method': 'Password',
@@ -243,7 +261,9 @@ class TestCauthApp(FunctionalTest):
                    'back': 'r/',
                    'args': {'token': 'user6_token'}, }
         # TODO(mhu) possible refactoring with previous function
-        with patch('cauth.utils.userdetails.UserDetailsCreator.create_user'):
+        to_patch = 'cauth.utils.userdetails.UserDetailsCreator.create_user'
+        with patch(to_patch) as cu:
+            cu.return_value = 999, {}
             with patch('requests.get'):
                 response = self.app.post_json('/login',
                                               payload)
@@ -277,7 +297,7 @@ class TestCauthApp(FunctionalTest):
                             'password': 'userpass'}, }
         to_patch = 'cauth.utils.userdetails.UserDetailsCreator.create_user'
         with patch(to_patch) as cu:
-            cu.return_value = 42
+            cu.return_value = 42, {}
             with patch('requests.get'):
                 # Not authenticated
                 key_get = self.app.get('/apikey', status="*")
@@ -359,7 +379,7 @@ class TestCauthApp(FunctionalTest):
                             'password': 'userpass'}, }
         to_patch = 'cauth.utils.userdetails.UserDetailsCreator.create_user'
         with patch(to_patch) as cu:
-            cu.return_value = 123
+            cu.return_value = 123, {}
             with patch('requests.get'):
                 response = self.app.post_json('/login',
                                               payload)
@@ -385,7 +405,7 @@ class TestCauthApp(FunctionalTest):
                    'back': '/r/',
                    'args': {}, }
         with patch(to_patch) as cu:
-            cu.return_value = 123
+            cu.return_value = 123, {}
             saml_env = {'MELLON_login': 'wanpanman',
                         'MELLON_fullname': 'Caped Baldy',
                         'MELLON_email': 'swole@hero.org',

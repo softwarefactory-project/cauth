@@ -18,6 +18,7 @@ from unittest import TestCase
 from contextlib import nested
 from mock import patch, Mock
 from stevedore import driver
+import jwt
 
 from cauth.tests.common import dummy_conf, FakeResponse
 
@@ -128,6 +129,11 @@ class TestGerritPlugin(TestCase):
             name='managesf',
             invoke_on_load=True,
             invoke_args=(self.conf,)).driver
+
+        def fake_get_resources(*args, **kwargs):
+            return {}
+
+        msf.get_resources = fake_get_resources
         patches = [patch('cauth.service.managesf.requests.post'),
                    patch('cauth.service.managesf.create_ticket'),
                    patch('cauth.service.managesf.orig_conf'), ]
@@ -152,6 +158,127 @@ class TestGerritPlugin(TestCase):
                                     data=data,
                                     headers=headers,
                                     cookies=cookie)
+
+    def test_managesf_create_jwt(self):
+        msf = driver.DriverManager(
+            namespace='cauth.service',
+            name='managesf',
+            invoke_on_load=True,
+            invoke_args=(self.conf,)).driver
+        # override resource query method
+
+        def fake_get_resources(*args, **kwargs):
+            return {
+              "config-repo": "https://softwarefactory-project.io/r/config",
+              "public-url": "https://softwarefactory-project.io/manage",
+              "resources": {
+                "repos": {},
+                "connections": {},
+                "acls": {},
+                "groups": {},
+                "tenants": {
+                    "tenantA": {
+                        "name": "tenantA",
+                        "url": "xxx",
+                        "description": "my cool tenant A",
+                        "privileged-users": ["userA@tests.com", ],
+                    },
+                    "tenantB": {
+                        "name": "tenantB",
+                        "url": "xxx",
+                        "description": "my cool tenant B",
+                        "privileged-users": ["userB@tests.com", ],
+                    },
+                    "tenantC": {
+                        "name": "tenantC",
+                        "url": "xxx",
+                        "description": "my cool tenant C",
+                        "privileged-users": ["userA@tests.com",
+                                             "userB@tests.com", ],
+                    },
+                },
+                "projects": {
+                    "project1": {
+                        "website": "xxx",
+                        "name": "project1",
+                        "contacts": [],
+                        "documentation": "xxx",
+                        "mailing-lists": [],
+                        "issue-tracker": "xxx",
+                        "source-repositories": [],
+                        "tenant": "tenantA",
+                        "description": "aaaa",
+                        "privileged-users": ["userB@tests.com",
+                                             "userD@tests.com"]
+                    },
+                    "project2": {
+                        "website": "xxx",
+                        "name": "project2",
+                        "contacts": [],
+                        "documentation": "xxx",
+                        "mailing-lists": [],
+                        "issue-tracker": "xxx",
+                        "source-repositories": [],
+                        "tenant": "tenantA",
+                        "description": "aaaa",
+                        "privileged-users": ["userA@tests.com",
+                                             "userD@tests.com"]
+                    },
+                    "project3": {
+                        "website": "xxx",
+                        "name": "project1",
+                        "contacts": [],
+                        "documentation": "xxx",
+                        "mailing-lists": [],
+                        "issue-tracker": "xxx",
+                        "source-repositories": [],
+                        "tenant": "tenantA",
+                        "description": "aaaa",
+                    },
+                },
+              }
+            }
+
+        msf.get_resources = fake_get_resources
+        patches = [patch('cauth.service.managesf.requests.post'),
+                   patch('cauth.service.managesf.create_ticket'),
+                   patch('cauth.service.managesf.orig_conf'), ]
+        with nested(*patches) as (post, create_ticket, p_conf):
+            p_conf.app = self.conf.app
+            p_conf.zuul = self.conf.zuul
+            for user, tenants in [
+              ('userA', {'tenantA': '*',
+                         'tenantC': '*'}),
+              ('userB', {'tenantA': ['project1', ],
+                         'tenantB': '*',
+                         'tenantC': '*'}),
+              ('admin', {'tenantA': '*',
+                         'tenantB': '*',
+                         'tenantC': '*'}),
+              ('userC', {}),
+              ('userD', {'tenantA': ['project1', 'project2', ]}), ]:
+                user_jwt = msf.register_new_user({'login': user,
+                                                  'email': user + '@tests.com',
+                                                  'name': 'John Doe',
+                                                  'ssh_keys': [],
+                                                  'external_id': 42})
+                decoded = jwt.decode(user_jwt['jwt'],
+                                     self.conf.zuul['JWTsecret'],
+                                     algorithms='HS256')
+                self.assertTrue('zuul.tenants' in decoded)
+                self.assertEqual(sorted(tenants.keys()),
+                                 sorted(decoded['zuul.tenants'].keys()),
+                                 (user, tenants, decoded['zuul.tenants']))
+                for t in tenants:
+                    if isinstance(tenants[t], list):
+                        self.assertEqual(
+                            tenants[t],
+                            sorted(decoded['zuul.tenants'][t]),
+                            (user, tenants, decoded['zuul.tenants']))
+                    else:
+                        self.assertEqual(
+                            tenants[t],
+                            decoded['zuul.tenants'][t])
 
     def test_create_repoxplorer_user(self):
         msf = driver.DriverManager(
