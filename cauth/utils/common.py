@@ -59,7 +59,7 @@ def pre_register_user(user):
 
 def setup_response(user, back):
     try:
-        c_id = pre_register_user(user)
+        c_id, extra_tkt_data = pre_register_user(user)
     except exceptions.UsernameConflictException as e:
         response.status_code = 401
         msg = ('Error: this username is already registered with a '
@@ -77,7 +77,8 @@ def setup_response(user, back):
     ticket = create_ticket(uid=user['login'],
                            cid=c_id,
                            validuntil=(
-                               time.time() + conf.app['cookie_period']))
+                               time.time() + conf.app['cookie_period']),
+                           **extra_tkt_data)
     enc_ticket = urllib.quote_plus(ticket)
     response.set_cookie('auth_pubtkt',
                         value=enc_ticket,
