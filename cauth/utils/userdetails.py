@@ -39,6 +39,7 @@ class UserDetailsCreator:
                 logger.error(e.message)
 
     def create_user(self, user):
+        extra_tkt_data = {}
         external_info = user.get('external_auth', {})
         c_id = -1
         # skip if authenticating with an API key
@@ -53,9 +54,10 @@ class UserDetailsCreator:
             user['external_id'] = c_id
         for service in self.services:
             try:
-                service.register_new_user(user)
+                extra_tkt_data.update(
+                    service.register_new_user(user))
             except base.UserRegistrationError as e:
                 logger.info('When adding user %s (ID %s): %s' % (user['login'],
                                                                  c_id,
                                                                  e.message))
-        return c_id
+        return c_id, extra_tkt_data
