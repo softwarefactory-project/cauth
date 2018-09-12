@@ -206,6 +206,7 @@ class dummy_conf():
                                 'format': (
                                     '%(asctime)s %(levelname)-5.5s [%(name)s]'
                                     '[%(threadName)s] %(message)s')}}}
+        self.zuul = {'JWTsecret': 'SuperDuperSaiyan'}
 
     def __getitem__(self, key):
         return getattr(self, key, None)

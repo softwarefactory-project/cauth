@@ -20,6 +20,7 @@ import logging
 import time
 import urllib
 
+import jwt
 from pecan import conf as orig_conf
 import requests
 
@@ -41,6 +42,44 @@ class ManageSFServicePlugin(base.BaseServicePlugin):
     def delete_api_key(self, user):
         pass
 
+    def get_resources(self):
+        url = "%s/manage/v2/resources/" % self.conf['url']
+        validity = time.time() + orig_conf.app['cookie_period']
+        # an admin cookie should not be necessary though
+        ticket = create_ticket(uid='admin',
+                               validuntil=validity)
+        cookie = {'auth_pubtkt': urllib.quote_plus(ticket)}
+        logger.debug("Fetching resources tree")
+        resp = requests.get(url, cookies=cookie)
+        return resp.json()
+
+    def create_zuul_jwt(self, user):
+        if not getattr(orig_conf, 'zuul', False):
+            return {}
+        # fetch resources tree
+        authz = {'iss': self.conf['url'],
+                 'zuul.tenants': [],
+                 'exp': 0}
+        tenants = self.get_resources().get('resources', {}).get('tenants', {})
+        for tenant in tenants:
+            # admin and service user are privileged by default
+            if user['login'] in ['admin', 'SF_SERVICE_USER']:
+                authz['zuul.tenants'].append(tenants[tenant]['name'])
+                continue
+            if user['email'] in tenants[tenant].get('privileged-users', []):
+                authz['zuul.tenants'].append(tenants[tenant]['name'])
+        authz['exp'] = time.time() + orig_conf.app['cookie_period']
+        try:
+            token = jwt.encode(authz,
+                               key=orig_conf.zuul['JWTsecret'],
+                               # TODO this is hardcoded in zuul for now
+                               algorithm='HS256').decode('utf-8')
+        except Exception as e:
+            logger.error('JWT creation failed: %s' % e)
+            return {}
+        logger.debug('jwt created: %s[TRUNCATED]' % token[:10])
+        return {'jwt': token}
+
     def register_new_user(self, user):
         _user = {"full_name": user['name'],
                  "email": str(user['email']),
@@ -61,3 +100,5 @@ class ManageSFServicePlugin(base.BaseServicePlugin):
         resp = requests.post(url, data=data, headers=headers,
                              cookies=cookie)
         logger.debug('managesf responded with code: %s' % resp.status_code)
+        # TODO plug ACL info retrieval
+        return self.create_zuul_jwt(user)
