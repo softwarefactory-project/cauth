@@ -93,7 +93,7 @@ class GerritServicePlugin(base.BaseServicePlugin):
 
     def register_new_user(self, user):
         if not self.conf.get("register_user", True):
-            return
+            return {}
         _user = {"name": unicode(user['name']), "email": str(user['email'])}
         data = json.dumps(_user, default=lambda o: o.__dict__)
 
@@ -105,7 +105,7 @@ class GerritServicePlugin(base.BaseServicePlugin):
             msg = 'Failed to register new user %s: %s' % (user['email'],
                                                           response)
             logger.error(msg)
-            return False
+            return {}
 
         response = requests.get(url, headers=headers,
                                 auth=("admin", self.conf['password']))
@@ -115,7 +115,7 @@ class GerritServicePlugin(base.BaseServicePlugin):
         except (KeyError, ValueError):
             msg = 'Failed to retreive account %s from server' % user['email']
             logger.exception(msg)
-            return False
+            return {}
 
         fetch_ssh_keys = False
         if account_id:
@@ -123,3 +123,4 @@ class GerritServicePlugin(base.BaseServicePlugin):
                                                           user['login'])
         if user.get('ssh_keys', None) and fetch_ssh_keys:
             self.add_sshkeys(user['login'], user['ssh_keys'])
+        return {}
