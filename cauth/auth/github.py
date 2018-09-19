@@ -34,7 +34,10 @@ class BaseGithubAuthPlugin(base.AuthProtocolPlugin):
 
     def __init__(self, conf):
         super(BaseGithubAuthPlugin, self).__init__(conf)
-        self.scope = 'user:email, read:public_key'
+        self.read_ssh_keys = self.conf.get('read_ssh_keys', True)
+        self.scope = 'user:email'
+        if self.read_ssh_keys:
+            self.scope += ', read:public_key'
         if self.conf.get('allowed_organizations'):
             self.scope += ', read:org'
 
@@ -89,13 +92,15 @@ class GithubPersonalAccessTokenAuthPlugin(BaseGithubAuthPlugin):
                 logger.error(msg, resp)
             data = resp.json()
 
-            resp = requests.get("https://api.github.com/user/keys",
-                                auth=basic_auth)
-            if not resp.ok:
-                msg = 'Failed to get keys'
-                logger.error(msg, resp)
+            ssh_keys = []
+            if self.read_ssh_keys:
+                resp = requests.get("https://api.github.com/user/keys",
+                                    auth=basic_auth)
+                if not resp.ok:
+                    msg = 'Failed to get keys'
+                    logger.error(msg, resp)
 
-            ssh_keys = resp.json()
+                ssh_keys = resp.json()
         except Exception as e:
             logger.error(e.message)
             raise base.UnauthenticatedError(e.message)
@@ -155,12 +160,15 @@ class GithubAuthPlugin(BaseGithubAuthPlugin,
         login = data.get('login')
         name = data.get('name')
 
-        resp = requests.get("https://api.github.com/users/%s/keys" % login,
-                            headers=headers)
-        if not resp.ok:
-            logger.error('Failed to get keys')
-            raise base.UnauthenticatedError(resp)
-        ssh_keys = resp.json()
+        ssh_keys = []
+        if self.read_ssh_keys:
+            resp = requests.get(
+                "https://api.github.com/users/%s/keys" % login,
+                headers=headers)
+            if not resp.ok:
+                logger.error('Failed to get keys')
+                raise base.UnauthenticatedError(resp)
+            ssh_keys = resp.json()
 
         if not self.organization_allowed(token):
             raise base.UnauthenticatedError("Organization not allowed")
