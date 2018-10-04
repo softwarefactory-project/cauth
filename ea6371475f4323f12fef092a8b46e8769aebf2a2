@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "715e7568_4b027c52",
+        "filename": "cauth/auth/apikey.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2018-10-04T09:07:27Z",
+      "side": 1,
+      "message": "A follow-up patch will remove the gateway use-case.",
+      "parentUuid": "66fdce9a_db94d8e9",
+      "range": {
+        "startLine": 66,
+        "startChar": 20,
+        "endLine": 66,
+        "endChar": 33
+      },
+      "revId": "ea6371475f4323f12fef092a8b46e8769aebf2a2",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56377b16_53125c54",
         "filename": "cauth/service/managesf.py",
         "patchSetId": 5
