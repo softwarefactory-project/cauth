@@ -139,7 +139,7 @@ class TestGerritPlugin(TestCase):
                                    'name': 'John Doe',
                                    'ssh_keys': [],
                                    'external_id': 42})
-            url = "%s/manage/services_users/" % self.conf.managesf['url']
+            url = "%s/services_users/" % self.conf.managesf['url']
             data = json.dumps({"full_name": "John Doe",
                                "email": "john@tests.dom",
                                "username": "john",
