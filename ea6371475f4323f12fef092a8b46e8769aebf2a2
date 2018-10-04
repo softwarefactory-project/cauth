@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66fdce9a_db94d8e9",
+        "filename": "cauth/auth/apikey.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-10-04T08:48:38Z",
+      "side": 1,
+      "message": "Should only be set for the internal url",
+      "range": {
+        "startLine": 66,
+        "startChar": 20,
+        "endLine": 66,
+        "endChar": 33
+      },
+      "revId": "ea6371475f4323f12fef092a8b46e8769aebf2a2",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56377b16_53125c54",
+        "filename": "cauth/service/managesf.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-10-04T08:48:38Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 54,
+        "startChar": 20,
+        "endLine": 54,
+        "endChar": 33
+      },
+      "revId": "ea6371475f4323f12fef092a8b46e8769aebf2a2",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
