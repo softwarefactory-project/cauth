@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a50d1a3_22036aba",
+        "filename": "cauth/model/db.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-10-09T11:32:34Z",
+      "side": 1,
+      "message": "Looks like we have a username here in any case or is it expected to be an empty string ?",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 20
+      },
+      "revId": "7c6f53955639733c75b7bbf8774db4c0f9f460ae",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a50d1a3_4200f6aa",
+        "filename": "cauth/model/db.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-10-09T11:32:34Z",
+      "side": 1,
+      "message": "dito",
+      "range": {
+        "startLine": 118,
+        "startChar": 5,
+        "endLine": 118,
+        "endChar": 20
+      },
+      "revId": "7c6f53955639733c75b7bbf8774db4c0f9f460ae",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a50d1a3_02318ea2",
+        "filename": "cauth/utils/userdetails.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-10-09T11:32:34Z",
+      "side": 1,
+      "message": "Could you reduce the suffix less character like 6 MAX it will be sufficient wdyt ?",
+      "range": {
+        "startLine": 33,
+        "startChar": 25,
+        "endLine": 33,
+        "endChar": 31
+      },
+      "revId": "7c6f53955639733c75b7bbf8774db4c0f9f460ae",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a50d1a3_e22b4232",
+        "filename": "cauth/utils/userdetails.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-10-09T11:32:34Z",
+      "side": 1,
+      "message": "elif strategy !\u003d \u0027FORBID\u0027 or we can assume FORBID if not DIFFERENCIATE  ?",
+      "revId": "7c6f53955639733c75b7bbf8774db4c0f9f460ae",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
