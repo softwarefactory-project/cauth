@@ -29,8 +29,10 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
     """This plugin deals with repoXplorer user backend."""
 
     _config_section = "repoxplorer"
+    log = logging.getLogger("cauth.RepoxplorerServicePlugin")
 
     def register_new_user(self, user):
+        transactionID = user.get('transactionID', '')
         _user = {"uid": user['login'],
                  "name": user['name'],
                  "default-email": str(user['email']),
@@ -57,9 +59,9 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
         try:
             resp = requests.get(url, headers=headers, timeout=5)
         except Exception as exc:
-            logger.info(
-                "Skip user %s registration, repoxplorer backend down (%s)" % (
-                    urllib.quote_plus(user["login"]), exc))
+            self.twarning(
+                "Skip user %s registration, repoxplorer backend down (%s)",
+                transactionID, urllib.quote_plus(user["login"]), exc)
             return
 
         if resp.status_code == 404:
@@ -85,9 +87,10 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
             for e in to_add:
                 _user["emails"].append({'email': e})
         else:
-            logger.info(
-                "Skip user %s registration, unexpected status code (%s)" % (
-                    urllib.quote_plus(user["login"]), resp.status_code))
+            self.twarning(
+                "Skip user %s registration, unexpected status code (%s)",
+                transactionID, urllib.quote_plus(user["login"]),
+                resp.status_code)
             return
 
         data = json.dumps(_user, default=lambda o: o.__dict__)
@@ -96,12 +99,13 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
         try:
             resp = req(url, data=data, headers=headers, timeout=5)
         except Exception as exc:
-            logger.info(
-                "Skip user %s registration, repoxplorer backend down (%s)" % (
-                    urllib.quote_plus(user["login"]), exc))
+            self.twarning(
+                "Skip user %s registration, repoxplorer backend down (%s)",
+                transactionID, urllib.quote_plus(user["login"]), exc)
             return
 
-        logger.debug('repoxplorer responded with code: %s' % resp.status_code)
+        self.tdebug('repoxplorer responded with code: %s',
+                    transactionID, resp.status_code)
 
     def set_api_key(self, user, key):
         pass

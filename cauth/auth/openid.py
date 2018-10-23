@@ -21,17 +21,16 @@ from pecan import request
 import urllib
 
 from cauth.auth import base
+from cauth.utils import transaction
 
 
 """OpenID authentication plugins."""
 
 
-logger = logging.getLogger(__name__)
-
-
 class OpenIDAuthPlugin(base.AuthProtocolPlugin):
 
     _config_section = "openid"
+    log = logging.getLogger("cauth.OpenIDAuthPlugin")
 
     @classmethod
     def get_args(cls):
@@ -43,12 +42,12 @@ class OpenIDAuthPlugin(base.AuthProtocolPlugin):
         else:
             back = auth_context['back']
             response = auth_context['response']
-            self.redirect(back, response)
+            self.redirect(back, response, auth_context.get('transactionID'))
 
     def get_domain(self):
         return self.conf['auth_url']
 
-    def redirect(self, back, response):
+    def redirect(self, back, response, transactionID):
         """Send the user to the OpenID auth page"""
         params = {'back': back}
         response.status_code = 302
@@ -80,12 +79,15 @@ class OpenIDAuthPlugin(base.AuthProtocolPlugin):
                                       "namePerson/friendly",
             "openid.ext2.required": "Alias,FirstName,LastName,Email"
         }
-
+        self.tdebug("Redirecting user to %s",
+                    transactionID, self.conf['auth_url'])
         response.location = self.conf['auth_url'] + "?" + \
             urllib.urlencode(openid_params)
 
     def verify_data(self, auth_context):
-        logger.debug('Verifying OpenID auth data %r' % auth_context)
+        transactionID = transaction.ensure_tid(auth_context)
+        self.tdebug("Verifying OpenID auth data %r",
+                    transactionID, auth_context)
         verify_params = auth_context.copy()
         verify_params["openid.mode"] = "check_authentication"
         verify_response = requests.post(self.conf['auth_url'],
@@ -101,26 +103,29 @@ class OpenIDAuthPlugin(base.AuthProtocolPlugin):
                       'openid.sreg.fullname', ]:
                 if i not in verify_params or not verify_params[i]:
                     msg = 'User must share %s' % i.split('.')[-1]
+                    self.terror(msg, transactionID)
                     raise base.UnauthenticatedError(msg)
-            logger.debug('OpenID auth data verified')
+            self.tdebug('OpenID auth data verified', transactionID)
         else:
-            msg = 'Invalid user data according to %s' % self.conf['auth_url']
+            msg = 'Invalid user data'
+            self.terror(msg + ': %r' % verify_response, transactionID)
             raise base.UnauthenticatedError(msg)
 
     def _authenticate(self, **auth_context):
         """Called at the callback level"""
         self.verify_data(auth_context)
+        transactionID = auth_context['transactionID']
         ssh_keys = []
         login = auth_context['openid.sreg.nickname']
         email = auth_context['openid.sreg.email']
         name = auth_context['openid.sreg.fullname']
         external_id = auth_context['openid.claimed_id']
-        logger.info(
-            'Client %s (%s) authenticated through OpenID'
-            % (login, email))
+        self.tinfo('Client %s (%s) authenticated through OpenID',
+                   transactionID, login, email)
         return {'login': login,
                 'email': email,
                 'name': name,
                 'ssh_keys': ssh_keys,
                 'external_auth': {'external_id': external_id,
-                                  'domain': self.get_domain()}}
+                                  'domain': self.get_domain()},
+                'transactionID': transactionID}

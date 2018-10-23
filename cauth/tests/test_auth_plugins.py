@@ -164,6 +164,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                     'external_auth': {'domain': 'CAUTH_CONF',
                                       'external_id': 'user1'}}
         authenticated = driver.authenticate(**auth_context)
+        del authenticated['transactionID']
         self.assertEqual(expected,
                          authenticated,
                          "Got %r" % authenticated)
@@ -177,6 +178,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                     'external_auth': {'domain': 'CAUTH_CONF',
                                       'external_id': 'user2'}}
         authenticated = driver.authenticate(**auth_context)
+        del authenticated['transactionID']
         self.assertEqual(expected,
                          authenticated,
                          "Got %r" % authenticated)
@@ -212,6 +214,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                          'sshkey': 'Jerry was a race car driver'}
             g.return_value = FakeResponse(200, json.dumps(_response), True)
             authenticated = driver.authenticate(**auth_context)
+            del authenticated['transactionID']
             self.assertEqual(expected,
                              authenticated,
                              "Got %r" % authenticated)
@@ -238,6 +241,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                          'sshkey': 'Icha Icha Paradise'}
             g.return_value = FakeResponse(200, json.dumps(_response), True)
             authenticated = driver.authenticate(**auth_context)
+            del authenticated['transactionID']
             self.assertEqual(expected,
                              authenticated,
                              "Got %r" % authenticated)
@@ -266,6 +270,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
             client.user_id = 1234
             c.return_value = client
             authenticated = driver.authenticate(**auth_context)
+            del authenticated['transactionID']
             self.assertEqual(expected,
                              authenticated,
                              "Got %r" % authenticated)
@@ -306,6 +311,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                                             'sn': [expected['name'], ], }), ]
 
             authenticated = driver.authenticate(**auth_context)
+            del authenticated['transactionID']
             conn.simple_bind_s.assert_called_with(
                 TEST_LDAP_AUTH['dn'] % {'username': 'Kenny'},
                 'McCormick')
@@ -351,6 +357,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                             'external_auth': {'domain': 'CAUTH_CONF',
                                               'external_id': 'user1'}}
                 authenticated = driver.authenticate(**auth_context)
+                del authenticated['transactionID']
                 self.assertEqual(expected,
                                  authenticated,
                                  "Got %r" % authenticated)
@@ -373,6 +380,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                                               json.dumps(_response),
                                               True)
                 authenticated = driver.authenticate(**auth_context)
+                del authenticated['transactionID']
                 self.assertEqual(expected,
                                  authenticated,
                                  "Got %r" % authenticated)
@@ -388,10 +396,12 @@ class TestGithubOrganizations(BaseTestAuthPlugin):
         """Test checking allowed organizations"""
         with patch('requests.get') as g:
             g.return_value.json.return_value = [{'login': 'eNovance'}, ]
-            self.assertTrue(self.driver.organization_allowed('token'))
+            self.assertTrue(self.driver.organization_allowed(
+                'token', 'FAKE-TID'))
         with patch('requests.get') as g:
             g.return_value.json.return_value = [{'login': 'acme'}, ]
-            self.assertFalse(self.driver.organization_allowed('token'))
+            self.assertFalse(self.driver.organization_allowed(
+                'token', 'FAKE-TID'))
 
     def tearDown(self):
         if 'allowed_organizations' in TEST_GITHUB_AUTH:
@@ -421,7 +431,7 @@ class TestGithubAuthPlugin(BaseTestAuthPlugin):
             p.return_value = FakeResponse(200,
                                           json.dumps(token),
                                           True)
-            returned_token = self.driver.get_access_token('boop')
+            returned_token = self.driver.get_access_token('boop', 'FAKE-TID')
             self.assertEqual(_token,
                              returned_token)
 
@@ -439,6 +449,7 @@ class TestGithubAuthPlugin(BaseTestAuthPlugin):
                                       'external_id': 666}}
         with httmock.HTTMock(githubmock_request):
             authenticated = self.driver.authenticate(**auth_context)
+            del authenticated['transactionID']
             self.assertEqual(expected,
                              authenticated,
                              "Got %r" % authenticated)
@@ -563,7 +574,7 @@ class TestOpenIDConnectAuthPlugin(BaseTestAuthPlugin):
             # In the meantime, just test the begining of authentication phase
             with self.assertRaisesRegexp(
                     base.UnauthenticatedError, 'Couldn\'t fetch user-info'):
-                self.driver._authenticate("dumb", "42", qs)
+                self.driver._authenticate("dumb", "42", qs, "FAKE-TID")
 
     def test_03_mappings(self):
         """Test custom auth fields mapping."""
@@ -586,7 +597,7 @@ class TestOpenIDConnectAuthPlugin(BaseTestAuthPlugin):
                     return self.d
 
             datr.return_value = fake(OPENID_CONNECT_TOKEN)
-            auth = self.driver._authenticate("dumb", "42", qs)
+            auth = self.driver._authenticate("dumb", "42", qs, "FAKE-TID")
             self.assertEqual(auth['login'],
                              OPENID_CONNECT_TOKEN['id_token']['azp'])
             self.assertEqual(auth['email'],
@@ -627,7 +638,7 @@ class TestGoogleAuthPlugin(BaseTestAuthPlugin):
             get.return_value = FakeResponse(200,
                                             content=google_output,
                                             is_json=True)
-            user = self.driver.get_user_data(token='MYTOKEN')
+            user = self.driver.get_user_data('MYTOKEN', 'FAKE-TID')
             get.assert_called_with("https://www.googleapis.com/plus/"
                                    "v1/people/me?access_token=MYTOKEN")
             self.assertEqual("dio.brando",
@@ -689,7 +700,7 @@ class TestBitBucketAuthPlugin(BaseTestAuthPlugin):
 
         with patch('requests.get') as get:
             get.side_effect = fake_get
-            user = self.driver.get_user_data(token='MYTOKEN')
+            user = self.driver.get_user_data('MYTOKEN', 'FAKE-TID')
             self.assertEqual("JoJo",
                              user.get('login'))
             self.assertEqual("Joseph Joestar",
@@ -746,6 +757,7 @@ class TestOpenIDAuthPlugin(BaseTestAuthPlugin):
         auth_context = openid_identity.copy()
         auth_context['response'] = MagicMock()
         auth_context['back'] = '/'
+        auth_context['transactionID'] = 'deadbeef'
         i = openid_identity['openid.claimed_id']
         expected = {'login': 'NickyNicky',
                     'email': 'testy@test.com',
@@ -759,6 +771,7 @@ class TestOpenIDAuthPlugin(BaseTestAuthPlugin):
             with patch('cauth.auth.openid.request') as r:
                 r.host_url = 'tests.dom'
                 authenticated = self.driver._authenticate(**auth_context)
+                del authenticated['transactionID']
                 self.assertEqual(expected,
                                  authenticated,
                                  "Got %r, expected %r" % (authenticated,
@@ -782,6 +795,7 @@ class TestGithubPersonalAccessTokenAuthPlugin(BaseTestAuthPlugin):
                         'external_auth': {'domain': d,
                                           'external_id': 666}}
             authenticated = self.driver.authenticate(**auth_context)
+            del authenticated['transactionID']
             self.assertEqual(expected,
                              authenticated,
                              "Got %r" % authenticated)

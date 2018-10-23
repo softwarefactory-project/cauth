@@ -18,6 +18,8 @@
 import abc
 import six
 
+from cauth.utils.transaction import TransactionLogger
+
 
 class UserRegistrationError(Exception):
     pass
@@ -28,7 +30,7 @@ class ServiceConfigurationError(Exception):
 
 
 @six.add_metaclass(abc.ABCMeta)
-class BaseServicePlugin(object):
+class BaseServicePlugin(TransactionLogger):
     """Base class for service plugin."""
 
     _config_section = "base"

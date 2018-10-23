@@ -21,7 +21,8 @@ import time
 import urllib
 
 from cauth.auth import base
-from cauth.utils.common import create_ticket
+from cauth.utils import common
+from cauth.utils import transaction
 
 from cauth.model import db
 
@@ -29,13 +30,11 @@ from cauth.model import db
 """API key authentication plugin."""
 
 
-logger = logging.getLogger(__name__)
-
-
 class APIKeyAuthPlugin(base.AuthProtocolPlugin):
     """User authentication with an API key.
     """
 
+    log = logging.getLogger("cauth.APIKeyAuthPlugin")
     _config_section = "managesf"
 
     def __init__(self, conf):
@@ -47,12 +46,16 @@ class APIKeyAuthPlugin(base.AuthProtocolPlugin):
         return {'api_key': {'description': 'the user API key'}, }
 
     def authenticate(self, **auth_context):
+        transactionID = transaction.ensure_tid(auth_context)
+        self.tdebug("Attempting authentication by API key", transactionID)
         api_key = auth_context.get('api_key', None)
         if not api_key:
+            self.tdebug("Missing API key", transactionID)
             raise base.UnauthenticatedError('Missing API key')
         # do we have the key ?
         cauth_id = db.get_cauth_id_from_api_key(api_key)
         if not cauth_id:
+            self.tdebug("API key not found", transactionID)
             raise base.UnauthenticatedError('API key not found')
         # fetch the user info from manageSF
         url = urllib.basejoin(
@@ -61,27 +64,28 @@ class APIKeyAuthPlugin(base.AuthProtocolPlugin):
                    "X-Remote-User": "admin"}
         # short lived so that intercepting the cookie has limited impact
         validity = time.time() + 10
-        ticket = create_ticket(uid='admin',
-                               validuntil=validity)
+        ticket = common.create_ticket(uid='admin',
+                                      validuntil=validity)
         cookie = {'auth_pubtkt': urllib.quote_plus(ticket)}
-        msg = 'Retrieving user info from %s for cauth_id %s ...'
-        logger.debug(msg % (self.conf['url'], cauth_id))
+        self.tdebug("Retrieving user info from %s for cauth_id %s ...",
+                    transactionID, self.conf['url'], cauth_id)
         resp = requests.get(url, headers=headers,
                             cookies=cookie)
         if resp.status_code > 399:
-            msg = 'manageSF responded with %i: "%s"' % (resp.status_code,
-                                                        resp.text)
-            logger.error(msg)
+            msg = "manageSF responsed with error %i: \"%s\"" % (
+                resp.status_code, resp.text)
+            self.terror(msg, transactionID)
             raise base.UnauthenticatedError(msg)
         user_info = {'login': resp.json()['username'],
                      'email': resp.json()['email'],
                      'name': resp.json()['fullname'],
                      'ssh_keys': [],
                      'external_auth': {'domain': self.get_domain(),
-                                       'external_id': cauth_id}}
-        msg = u"cauth id %s for user %s (%s) authenticated " +\
-              u"successfully with API key"
-        logger.info(msg % (cauth_id, user_info['login'], user_info['email']))
+                                       'external_id': cauth_id},
+                     'transactionID': transactionID}
+        self.tinfo("cauth id %s for user %s (%s) authenticated "
+                   "successfully with API key", transactionID,
+                   cauth_id, user_info['login'], user_info['email'])
         return user_info
 
     def get_domain(self):

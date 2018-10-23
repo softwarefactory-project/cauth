@@ -22,9 +22,7 @@ from stevedore import driver
 from cauth.auth import base
 from cauth.model import db
 from cauth.utils import common
-
-
-logger = logging.getLogger(__name__)
+from cauth.utils import transaction
 
 
 OAUTH_PROVIDERS_PLUGINS = ['Github',
@@ -32,7 +30,9 @@ OAUTH_PROVIDERS_PLUGINS = ['Github',
                            'BitBucket', ]
 
 
-class OAuth2Controller(object):
+class OAuth2Controller(transaction.TransactionLogger):
+    log = logging.getLogger("cauth.Oauth2Controller")
+
     def __init__(self):
         self.auth_plugins = {}
         for p in OAUTH_PROVIDERS_PLUGINS:
@@ -42,7 +42,7 @@ class OAuth2Controller(object):
                     name=p,
                     invoke_on_load=True,
                     invoke_args=(conf,)).driver
-                logger.info('Loaded OAuth2 plugin %s' % p)
+                self.log.debug('Loaded OAuth2 plugin %s' % p)
             except Exception:
                 pass
         if not self.auth_plugins:
@@ -56,22 +56,25 @@ class OAuth2Controller(object):
         auth_context = kwargs
         auth_context['response'] = kwargs
         auth_context['calling_back'] = True
+        transactionID = transaction.ensure_tid(auth_context)
         try:
             # Verify the state previously put in the db
             state = auth_context.get('state', None)
             back, provider = db.get_url(state)
             if not back:
                 err = 'OAuth callback with forged state, discarding'
-                logger.debug(err)
+                self.tdebug(err, transactionID)
                 raise base.UnauthenticatedError(err)
             auth_plugin = self.auth_plugins.get(provider)
             if not auth_plugin:
                 msg = 'Unknown OAuth provider: %s' % provider
-                logger.error(msg)
+                self.terror(msg, transactionID)
                 raise base.UnauthenticatedError(msg)
-            logger.debug('Callback called by OAuth provider %s' % provider)
+            self.tdebug('Callback called by OAuth provider %s',
+                        transactionID, provider)
             auth_context['back'] = back
             valid_user = auth_plugin.authenticate(**auth_context)
+            raise base.UnauthenticatedError("Failure to authenticate")
         except base.UnauthenticatedError as e:
             response.status = 401
             auth_methods = [k for k, v in conf.get('auth', {})]
@@ -79,9 +82,20 @@ class OAuth2Controller(object):
                           dict(back=back,
                                message='Authorization failure: %s' % e,
                                auth_methods=auth_methods))
-        logger.info(
-            '%s (%s) successfully authenticated with OAuth2.'
-            % (valid_user['login'], valid_user['email']))
+        except Exception:
+            msg = "Failure to authenticate"
+            self.texception(msg, transactionID)
+            response.status = 401
+            auth_methods = [k for k, v in conf.get('auth', {})]
+            return render('login.html',
+                          dict(back=back,
+                               message=msg,
+                               auth_methods=auth_methods))
+        self.tinfo("%s (%s) successfully authenticated with %s.",
+                   transactionID,
+                   valid_user["login"],
+                   valid_user.get('email'),
+                   auth_plugin.name)
         common.setup_response(valid_user,
                               back)
 

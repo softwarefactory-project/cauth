@@ -25,7 +25,7 @@ class ManageSFServicePlugin(base.BaseServicePlugin):
     """This plugin deals with the ManageSF wrapper."""
 
     _config_section = "managesf"
-    log = logging.getLogger(__name__)
+    log = logging.getLogger("cauth.ManageSFServicePlugin")
 
     def set_api_key(self, user, key):
         pass
@@ -40,8 +40,10 @@ class ManageSFServicePlugin(base.BaseServicePlugin):
                  "ssh_keys": user.get('ssh_keys', []),
                  "external_id": user['external_id']
                  }
+        transactionID = user.get('transactionID', '')
         url = "%s/services_users/" % self.conf['url']
-        self.log.debug('user declaration to managesf: %s' % _user)
+        self.tdebug('user declaration to managesf: %s', transactionID, _user)
         resp = requests.post(url, json=_user,
                              headers={"X-Remote-User": "admin"})
-        self.log.debug('managesf responded with code: %s' % resp.status_code)
+        self.tdebug('managesf responded with code: %s',
+                    transactionID, resp.status_code)
