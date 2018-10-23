@@ -28,15 +28,15 @@ except ImportError:
     kc = None
 
 from cauth.auth import base
+from cauth.utils import transaction
 
 
 """password-based authentication plugins."""
 
 
-logger = logging.getLogger(__name__)
-
-
 class BasePasswordAuthPlugin(base.AuthProtocolPlugin):
+
+    log = logging.getLogger("cauth.BasePasswordAuthPlugin")
 
     @classmethod
     def get_args(cls):
@@ -49,6 +49,7 @@ class LocalUserAuthPlugin(BasePasswordAuthPlugin):
     """
 
     _config_section = "users"
+    log = logging.getLogger("cauth.LocalUserAuthPlugin")
 
     def authenticate(self, **auth_context):
         username = auth_context.get('username', '')
@@ -63,8 +64,9 @@ class LocalUserAuthPlugin(BasePasswordAuthPlugin):
                         'ssh_keys': [],
                         'external_auth': {'domain': self.get_domain(),
                                           'external_id': username}}
-        err = '%s not found in local config file' % username
-        raise base.UnauthenticatedError(err)
+            else:
+                raise base.UnauthenticatedError("Bad password")
+        raise base.UnauthenticatedError("User not found")
 
     def get_domain(self):
         return "CAUTH_CONF"
@@ -75,28 +77,38 @@ class LDAPAuthPlugin(BasePasswordAuthPlugin):
     """
 
     _config_section = "ldap"
+    log = logging.getLogger("cauth.LDAPAuthPlugin")
 
     def get_domain(self):
         return self.conf['host']
 
     def authenticate(self, **auth_context):
+        transactionID = transaction.ensure_tid(auth_context)
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
+        self.tdebug("Initializing LDAP connection", transactionID)
         try:
             conn = ldap.initialize(self.conf['host'])
             conn.set_option(ldap.OPT_REFERRALS, 0)
         except ldap.LDAPError as e:
-            logger.error('Client unable to bind on LDAP: %s' % e.message)
-            raise base.UnauthenticatedError(e.message)
+            if getattr(self, 'standalone', True):
+                self.terror("Client unable to bind on LDAP: %s",
+                            transactionID, e.message)
+            raise base.UnauthenticatedError("LDAP error")
         if not password or not username:
-            logger.error('Client unable to bind on LDAP empty credentials.')
-            raise base.UnauthenticatedError('invalid credentials')
+            if getattr(self, 'standalone', True):
+                self.terror("Client unable to bind on LDAP empty credentials",
+                            transactionID)
+            raise base.UnauthenticatedError("LDAP error")
         who = self.conf['dn'] % {'username': username}
+        self.tdebug("attempting LDAP binding", transactionID)
         try:
             conn.simple_bind_s(who, password)
         except (ldap.INVALID_CREDENTIALS, ldap.SERVER_DOWN):
-            logger.error('Client unable to bind on LDAP invalid credentials.')
-            raise base.UnauthenticatedError('invalid credentials')
+            if getattr(self, 'standalone', True):
+                self.terror("Client unable to bind due to invalid credentials",
+                            transactionID)
+            raise base.UnauthenticatedError("LDAP error")
 
         basedn = self.conf.get('basedn', who)
         sfilter = self.conf.get('sfilter', '(cn=*)') % {'username': username}
@@ -112,9 +124,10 @@ class LDAPAuthPlugin(BasePasswordAuthPlugin):
                     'ssh_keys': [],
                     'external_auth': {'domain': self.get_domain(),
                                       'external_id': who}}
-
-        logger.error('LDAP client search failed')
-        raise base.UnauthenticatedError('LDAP client search failed')
+        if getattr(self, 'standalone', True):
+            self.terror("LDAP search returned %i result(s)",
+                        transactionID, len(result))
+        raise base.UnauthenticatedError("Unauthorized")
 
 
 class ManageSFAuthPlugin(BasePasswordAuthPlugin):
@@ -122,18 +135,23 @@ class ManageSFAuthPlugin(BasePasswordAuthPlugin):
     """
 
     _config_section = "localdb"
+    log = logging.getLogger("cauth.ManageSFAuthPlugin")
 
     def authenticate(self, **auth_context):
+        transactionID = transaction.ensure_tid(auth_context)
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
         bind_url = urllib.basejoin(self.conf['managesf_url'], '/bind')
         headers = {"Authorization": encode(username.encode('utf8'),
                                            password.encode('utf8'))}
+        self.tdebug("Binding to managesf", transactionID)
         response = requests.get(bind_url, headers=headers)
 
         if response.status_code > 399:
-            logger.error('localdb auth failed: %s' % response)
-            raise base.UnauthenticatedError(response)
+            self.tdebug("localdb auth failed for user %s, reason: %s",
+                        transactionID, username, response.status_code)
+            raise base.UnauthenticatedError(
+                "Unauthorized, %d" % response.status_code)
         infos = response.json()
         return {'login': username,
                 'email': infos['email'],
@@ -153,6 +171,7 @@ class KeystoneAuthPlugin(BasePasswordAuthPlugin):
     """
 
     _config_section = "keystone"
+    log = logging.getLogger("cauth.KeystoneAuthPlugin")
 
     def get_domain(self):
         return self.conf['auth_url']
@@ -160,10 +179,12 @@ class KeystoneAuthPlugin(BasePasswordAuthPlugin):
     def authenticate(self, **auth_context):
         """Authentication against a keystone server. We simply try to fetch an
         unscoped token."""
+        transactionID = transaction.ensure_tid(auth_context)
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
         auth_url = self.conf['auth_url']
         if kc:
+            self.tdebug('Connecting to keystone server', transactionID)
             try:
                 client = kc.client.Client(auth_url=auth_url,
                                           username=username,
@@ -182,17 +203,17 @@ class KeystoneAuthPlugin(BasePasswordAuthPlugin):
                             'external_auth': {'domain': self.get_domain(),
                                               'external_id': external_id}}
             except kc.exceptions.Unauthorized:
-                msg = ("keystone authentication failed: "
-                       "Invalid user or password")
-                raise base.UnauthenticatedError(msg)
-            except Exception as e:
-                raise base.UnauthenticatedError("Unknown error: %s" % e)
+                self.terror("keystone authentication failed for user %s",
+                            transactionID, username)
+                raise base.UnauthenticatedError("Unauthorized")
+            except Exception:
+                self.texception("Unknown error", transactionID)
+                raise base.UnauthenticatedError("Unauthorized")
         else:
             msg = "keystone authentication not available on this server"
             raise base.UnauthenticatedError(msg)
         # every other case
-        msg = ("keystone authentication failed")
-        raise base.UnauthenticatedError(msg)
+        raise base.UnauthenticatedError("Unauthorized")
 
 
 class PasswordAuthPlugin(BasePasswordAuthPlugin):
@@ -200,18 +221,23 @@ class PasswordAuthPlugin(BasePasswordAuthPlugin):
     """
 
     _config_section = None
+    log = logging.getLogger("cauth.PasswordAuthPlugin")
+    name = "password"
 
     def __init__(self, conf):
         self.plugins = []
         plugins_list = [LocalUserAuthPlugin,
-                        LDAPAuthPlugin,
-                        ManageSFAuthPlugin]
+                        ManageSFAuthPlugin,
+                        LDAPAuthPlugin]
         if kc:
             plugins_list.append(KeystoneAuthPlugin)
         for plugin in plugins_list:
             try:
-                self.plugins.append(plugin(conf))
+                pg_instance = plugin(conf)
+                pg_instance.standalone = False
+                self.plugins.append(pg_instance)
             except base.AuthProtocolNotAvailableError:
+                # Just skip unavailable protocols
                 pass
 
     def configure_plugin(self, conf):
@@ -222,14 +248,19 @@ class PasswordAuthPlugin(BasePasswordAuthPlugin):
 
     def authenticate(self, **auth_context):
         username = auth_context.get('username')
+        transactionID = transaction.ensure_tid(auth_context)
         if not username:
-            raise base.UnauthenticatedError('No username provided')
+            raise base.UnauthenticatedError("Unauthorized")
         user = None
+        errors = []
         for plugin in self.plugins:
             try:
                 user = plugin.authenticate(**auth_context)
-            except base.UnauthenticatedError:
-                pass
+            except base.UnauthenticatedError as e:
+                errors.append("[%s: %s]" % (plugin.name, e.message))
         if user:
+            user['transactionID'] = transactionID
             return user
+        self.tinfo("Password authentication failed for user %s: %s",
+                   transactionID, username, ", ".join(errors))
         raise base.UnauthenticatedError('Password authentication failed')

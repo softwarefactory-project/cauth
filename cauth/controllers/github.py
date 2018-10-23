@@ -22,20 +22,22 @@ from stevedore import driver
 from cauth.auth import base
 from cauth.model import db
 from cauth.utils import common
+from cauth.utils import transaction
 
 
-logger = logging.getLogger(__name__)
-
-
-class PersonalAccessTokenGithubController(object):
+class PersonalAccessTokenGithubController(transaction.TransactionLogger):
+    log = logging.getLogger("cauth.PersonalAccessTokenGithubController")
 
     @expose()
     def index(self, **kwargs):
         if 'back' not in kwargs:
-            logger.error('Client requests authentication without back url.')
+            self.logger.error(
+                'Client requests authentication without back url.')
             abort(422)
         auth_context = kwargs
         auth_context['response'] = response
+        transactionID = transaction.ensure_tid(auth_context)
+        self.tdebug('Client index authentication.', transactionID)
 
         auth_plugin = driver.DriverManager(
             namespace='cauth.authentication',
@@ -52,14 +54,15 @@ class PersonalAccessTokenGithubController(object):
                           dict(back=auth_context['back'],
                                message='Authorization failure: %s' % e,
                                auth_methods=auth_methods))
-        msg = '%s (%s) authenticated with Github Personal Access Token.'
-        logger.info(msg % (valid_user['login'],
-                           valid_user['email']))
+        self.tinfo("(%s) authenticated with Github Personal Access Token.",
+                   transactionID, valid_user['login'], valid_user['email'])
         common.setup_response(valid_user,
                               auth_context['back'])
 
 
-class GithubController(object):
+class GithubController(transaction.TransactionLogger):
+    log = logging.getLogger("cauth.GithubController")
+
     def __init__(self):
         self.auth_plugin = driver.DriverManager(
             namespace='cauth.authentication',
@@ -72,12 +75,15 @@ class GithubController(object):
         auth_context = kwargs
         auth_context['response'] = kwargs
         auth_context['calling_back'] = True
+        transactionID = transaction.ensure_tid(auth_context)
+        self.tdebug('Client callback authentication.', transactionID)
         try:
             # Verify the state previously put in the db
             state = auth_context.get('state', None)
             back, _ = db.get_url(state)
             if not back:
                 err = 'GITHUB callback called with an unknown state.'
+                self.terror(err, transactionID)
                 raise base.UnauthenticatedError(err)
             auth_context['back'] = back
             valid_user = self.auth_plugin.authenticate(**auth_context)
@@ -88,9 +94,8 @@ class GithubController(object):
                           dict(back=back,
                                message='Authorization failure: %s' % e,
                                auth_methods=auth_methods))
-        logger.info(
-            '%s (%s) successfully authenticated with github.'
-            % (valid_user['login'], valid_user['email']))
+        self.tinfo('%s (%s) successfully authenticated with github.',
+                   transactionID, valid_user['login'], valid_user['email'])
         common.setup_response(valid_user,
                               back)
 
@@ -98,5 +103,7 @@ class GithubController(object):
     def index(self, **kwargs):
         auth_context = kwargs
         auth_context['response'] = response
+        transactionID = transaction.ensure_tid(auth_context)
+        self.tdebug('Client index authentication.', transactionID)
         # we don't expect a return value, we set up the redirect here
         self.auth_plugin.authenticate(**auth_context)

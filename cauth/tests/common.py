@@ -30,6 +30,7 @@ class FakeResponse():
         else:
             self.ok = False
         self.content = content
+        self.text = ""
         self._json = {}
         if is_json and content:
             self._json = json.loads(content)
@@ -42,6 +43,7 @@ openid_identity = {
     'openid.ax.type.LastName': 'http://schema.openid.net/namePerson/last',
     'openid.ax.count.FirstName': '0',
     'back': '/',
+    'transactionID': 'deadbeef',
     'openid.ns.sreg': 'http://openid.net/sreg/1.0',
     'openid.ax.type.Alias': 'http://schema.openid.net/namePerson/friendly',
     'openid.signed': 'assoc_handle,ax.count.Alias,'

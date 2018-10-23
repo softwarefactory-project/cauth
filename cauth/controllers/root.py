@@ -16,24 +16,37 @@
 # under the License.
 
 import logging
+from urllib import unquote
 
-from pecan import expose, response, conf
+from pecan import expose, request, response, conf
 from pecan.rest import RestController
 
 from cauth.auth import base as exceptions
 from cauth.controllers import base, github, introspection, openid, oauth2
 from cauth.controllers import apikey, openid_connect, SAML2
 from cauth.utils.common import LOGOUT_MSG
+from cauth.utils import transaction
 
 
 logger = logging.getLogger(__name__)
 
 
-class LogoutController(RestController):
+class LogoutController(RestController, transaction.TransactionLogger):
+    log = logging.getLogger("cauth.LogoutController")
+
     @expose(template='login.html')
     def get(self, **kwargs):
+        transactionID = transaction.make_tid()
+        try:
+            auth_pubtkt = unquote(request.cookies['auth_pubtkt'])
+        except KeyError:
+            auth_pubtkt = "cid=NONE"
+        infos = dict(vals.split('=', 1) for vals in auth_pubtkt.split(';'))
+        username = infos.get("uid", infos.get("cid"))
         response.delete_cookie('auth_pubtkt')
         auth_methods = [k for k, v in conf.get('auth', {})]
+        self.tinfo("%s successfully logout",
+                   transactionID, username)
         return dict(back='/', message=LOGOUT_MSG, auth_methods=auth_methods)
 
 
@@ -43,23 +56,23 @@ class RootController(object):
         login.github = github.GithubController()
         login.githubAPIkey = github.PersonalAccessTokenGithubController()
     except exceptions.AuthProtocolNotAvailableError as e:
-        logger.error("%s - skipping callback endpoint" % e.message)
+        pass
     try:
         login.oauth2 = oauth2.OAuth2Controller()
     except exceptions.AuthProtocolNotAvailableError as e:
-        logger.error("%s - skipping callback endpoint" % e.message)
+        pass
     try:
         login.openid = openid.OpenIDController()
     except exceptions.AuthProtocolNotAvailableError as e:
-        logger.error("%s - skipping callback endpoint" % e.message)
+        pass
     try:
         login.openid_connect = openid_connect.OpenIDConnectController()
     except exceptions.AuthProtocolNotAvailableError as e:
-        logger.error("%s - skipping callback endpoint" % e.message)
+        pass
     try:
         login.SAML2 = SAML2.SAML2Controller()
     except exceptions.AuthProtocolNotAvailableError as e:
-        logger.error("%s - skipping callback endpoint" % e.message)
+        pass
     about = introspection.IntrospectionController()
     apikey = apikey.APIKeyController()
 

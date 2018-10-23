@@ -22,12 +22,12 @@ from stevedore import driver
 
 from cauth.auth import base
 from cauth.utils import common
+from cauth.utils import transaction
 
 
-logger = logging.getLogger(__name__)
+class BaseLoginController(RestController, transaction.TransactionLogger):
 
-
-class BaseLoginController(RestController):
+    log = logging.getLogger("cauth.BaseLoginController")
 
     def make_auth_info(self, kwargs):
         """Build the new auth info structure from args posted with a form"""
@@ -49,11 +49,14 @@ class BaseLoginController(RestController):
         return auth_info
 
     def _json_login(self, auth_info):
+        transactionID = transaction.ensure_tid(auth_info)
         auth_context = {}
         auth_context['response'] = response
         auth_context['back'] = auth_info.get('back', None)
+        auth_context['transactionID'] = transactionID
         if not auth_context['back']:
-            logger.error('Client requests authentication without back url.')
+            self.terror("Client requests authentication without back url.",
+                        transactionID)
             abort(422)
         auth_context.update(auth_info.get('args', {}))
         auth_method = auth_info.get('method', 'NO_METHOD')
@@ -66,13 +69,12 @@ class BaseLoginController(RestController):
         except (RuntimeError, base.AuthProtocolNotAvailableError) as e:
             response.status = 401
             msg = '"%s" is not a valid authentication method' % auth_method
-            logger.error(msg + ': %s' % e)
+            self.terror(msg + ": %s", transactionID, e)
             response.body = render('login.html',
                                    dict(back=auth_context['back'],
                                         message=msg))
             return response.body
         try:
-            logger.info('%s plugin loaded' % auth_method)
             valid_user = auth_plugin.authenticate(**auth_context)
         except base.UnauthenticatedError:
             response.status = 401
@@ -81,23 +83,28 @@ class BaseLoginController(RestController):
                                         message='Authentication failed.'))
             return response.body
         if valid_user:
-            logger.info('%s successfully authenticated' % valid_user['login'])
+            self.tinfo('%s successfully authenticated with %s',
+                       transactionID, valid_user['login'], auth_plugin.name)
             common.setup_response(valid_user, auth_context['back'])
 
     @expose()
     def post(self, **kwargs):
-        logger.info('Client requests authentication.')
+        transactionID = transaction.make_tid()
+        self.tdebug('Client requests authentication.', transactionID)
         try:
             auth_info = request.json
+            auth_info["transactionID"] = transactionID
             self._json_login(auth_info)
         except ValueError:
             # old-style values passed through a form
             auth_info = self.make_auth_info(kwargs)
+            auth_info["transactionID"] = transactionID
             self._json_login(auth_info)
 
     @expose(template='login.html')
     def get(self, **kwargs):
+        transactionID = transaction.make_tid()
         back = kwargs.get('back', '/auth/logout')
-        logger.info('Client requests the login page.')
+        self.tdebug('Client requests the login page.', transactionID)
         auth_methods = [k for k, v in conf.get('auth', {})]
         return dict(back=back, message='', auth_methods=auth_methods)

@@ -18,6 +18,8 @@
 import abc
 import six
 
+from cauth.utils.transaction import TransactionLogger
+
 
 class AuthProtocolNotAvailableError(Exception):
     pass
@@ -28,10 +30,9 @@ class UnauthenticatedError(Exception):
 
 
 @six.add_metaclass(abc.ABCMeta)
-class AuthProtocolPlugin(object):
+class AuthProtocolPlugin(TransactionLogger):
     """Base plugin for authentication protocols.
     """
-
     _config_section = "base"
 
     def __init__(self, conf):
@@ -43,6 +44,7 @@ class AuthProtocolPlugin(object):
     def configure_plugin(self, conf):
         try:
             self.conf = conf[self._config_section]
+            self.name = self._config_section
         except KeyError:
             msg = ("The %s authentication protocol "
                    "is not available" % self._config_section)

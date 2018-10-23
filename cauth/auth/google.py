@@ -24,9 +24,6 @@ from cauth.auth import base, oauth2
 """Google OAuth2 API authentication plugin."""
 
 
-logger = logging.getLogger(__name__)
-
-
 class GoogleAuthPlugin(oauth2.BaseOAuth2Plugin):
     """Allows a google user to authenticate with the OAuth protocol.
     """
@@ -37,6 +34,7 @@ class GoogleAuthPlugin(oauth2.BaseOAuth2Plugin):
     auth_url = 'https://accounts.google.com/o/oauth2/v2/auth'
     scope = 'email profile'
     access_token_url = 'https://www.googleapis.com/oauth2/v4/token'
+    log = logging.getLogger("cauth.GoogleAuthPlugin")
 
     def get_error(self, **auth_context):
         """Parse the auth context returned by OAuth's first step."""
@@ -48,19 +46,22 @@ class GoogleAuthPlugin(oauth2.BaseOAuth2Plugin):
         """Return a provider-specific unique id from the user data."""
         return user_data.get('id') or user_data.get('nickname')
 
-    def get_user_data(self, token):
+    def get_user_data(self, token, transactionID):
 
         user_url = ("https://www.googleapis.com"
                     "/plus/v1/people/me?access_token=%s")
+        self.tdebug("Fetching user data at %s",
+                    transactionID, user_url % '<REDACTED>')
         resp = requests.get(user_url % token)
         if not resp.ok:
-            logger.error(user_url % '<REDACTED>')
             if resp.json():
                 data = resp.json()
                 error = data.get("error", {}).get("message", "Unknown error")
             else:
                 error = repr(resp)
-            raise base.UnauthenticatedError(error)
+            self.terror('Failed to access user data: %s',
+                        transactionID, error)
+            raise base.UnauthenticatedError("Failed to access user data")
         data = resp.json()
         name = (data.get('name', {}).get('givenName', '') + ' ' +
                 data.get('name', {}).get('familyName', '')).strip()
@@ -79,9 +80,8 @@ class GoogleAuthPlugin(oauth2.BaseOAuth2Plugin):
         login = email.split('@')[0]
         if not name:
             name = login
-        logger.info(
-            'Client %s (%s) authenticated through Google API'
-            % (login, email))
+        self.tinfo("Client %s (%s) authenticated through Google API",
+                   transactionID, login, email)
         return {'login': login,
                 'email': email,
                 'name': name,
