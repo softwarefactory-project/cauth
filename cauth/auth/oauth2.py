@@ -21,20 +21,20 @@ from requests.exceptions import ConnectionError
 import urllib
 
 from cauth.auth import base
+from cauth.utils import transaction
 from cauth.model import db
 
 
 """OAuth2 generic authentication plugin."""
 
 
-logger = logging.getLogger(__name__)
-
-
 class BaseOAuth2Plugin(base.AuthProtocolPlugin):
+    log = logging.getLogger("cauth.BaseOAuth2PLugin")
 
     # The name of the plugin goes there
     provider = "GenericOAuth2DontUseMe"
     _config_section = "OAuth2"
+
     # config will have the following elements:
     # * client_id: the provider's app id to use to initiate the workflow
     # * client_secret: the secret associated to client_id
@@ -68,11 +68,11 @@ class BaseOAuth2Plugin(base.AuthProtocolPlugin):
         error_description = None
         return error, error_description
 
-    def get_provider_id(self, user_data):
+    def get_provider_id(self, user_data, transactionID):
         """Return a provider-specific unique id from the user data."""
         raise NotImplementedError
 
-    def get_user_data(self, token):
+    def get_user_data(self, token, transactionID):
         """Query the provider to get information about the user."""
         # The return value will be something like this:
         # {'login': login,
@@ -84,17 +84,21 @@ class BaseOAuth2Plugin(base.AuthProtocolPlugin):
         raise NotImplementedError
 
     def authenticate(self, **auth_context):
+        transactionID = transaction.ensure_tid(auth_context)
         if auth_context.get('calling_back', False):
             state = auth_context.get('state', None)
+            self.tdebug("Incoming callback from %s",
+                        transactionID, self.provider)
             code = auth_context.get('code', None)
             error, error_description = self.get_error(**auth_context)
-            return self._authenticate(state, code, error, error_description)
+            return self._authenticate(
+                state, code, error, error_description, transactionID)
         else:
             back = auth_context['back']
             response = auth_context['response']
-            self.redirect(back, response)
+            self.redirect(back, response, transactionID)
 
-    def redirect(self, back, response):
+    def redirect(self, back, response, transactionID):
         """Send the user to the provider's auth page"""
         state = db.put_url(back, self.provider)
         scope = self.scope
@@ -105,32 +109,32 @@ class BaseOAuth2Plugin(base.AuthProtocolPlugin):
                               'state': state,
                               'scope': scope,
                               'response_type': 'code'})
-        logger.debug('Redirecting for OAuth2 authentication (step 1) to ' +
-                     location)
+        self.tdebug("Redirecting for OAuth2 authentication (step 1) to %s",
+                    transactionID, location)
         response.location = location
 
     def _authenticate(self, state=None, code=None,
-                      error=None, error_description=None):
+                      error=None, error_description=None, transactionID=None):
         """Called at the callback level"""
         if error:
             err = 'OAuth callback called with an error (%s): %s' % (
                 error,
                 error_description)
-            logger.debug(err)
+            self.terror(err, transactionID)
             raise base.UnauthenticatedError(err)
         if not state or not code:
             err = 'OAuth callback called without state or code as params.'
-            logger.debug(err)
+            self.twarning(err, transactionID)
             raise base.UnauthenticatedError(err)
 
-        token = self.get_access_token(code)
+        token = self.get_access_token(code, transactionID)
         if not token:
-            err = 'Unable to request an access token from the OAuth provider.'
-            logger.debug(err)
+            self.terror("Unable to request an access token "
+                        "from the OAuth provider.", transactionID)
             raise base.UnauthenticatedError(err)
-        return self.get_user_data(token)
+        return self.get_user_data(token, transactionID)
 
-    def get_access_token(self, code):
+    def get_access_token(self, code, transactionID):
         params = {
             "client_id": self.conf['client_id'],
             "client_secret": self.conf['client_secret'],
@@ -139,7 +143,8 @@ class BaseOAuth2Plugin(base.AuthProtocolPlugin):
             "grant_type": "authorization_code", }
         headers = {'Accept': 'application/json',
                    'Content-Type': 'application/x-www-form-urlencoded'}
-        logger.debug('Fetching access token at %s' % self.access_token_url)
+        self.tdebug("Fetching access token at %s",
+                    transactionID, self.access_token_url)
         try:
             resp = requests.post(self.access_token_url,
                                  data=params,
@@ -148,25 +153,24 @@ class BaseOAuth2Plugin(base.AuthProtocolPlugin):
                 err = ('Failed to fetch access tokens at %s with the '
                        'following arguments: %s')
                 params.update({'client_secret': '<REDACTED>'})
-                logger.error(err % (self.access_token_url,
-                                    repr(params)))
+                self.terror(
+                    err, transactionID, self.access_token_url, repr(params))
                 raise base.UnauthenticatedError(resp)
         except ConnectionError as err:
             raise base.UnauthenticatedError(err)
 
         jresp = resp.json()
         if 'token_type' in jresp:
-            logger.debug('Setting access token '
-                         'type to %s' % jresp['token_type'])
+            self.tdebug("Setting access token type to %s",
+                        transactionID, jresp['token_type'])
             self.access_token_type = jresp['token_type']
         if 'access_token' in jresp:
             return jresp['access_token']
         elif 'error' in jresp:
-            err = "An error occured (%s): %s" % (jresp.get('error', None),
-                                                 jresp.get('error_description',
-                                                           None))
-            logger.error(err)
+            err = "An error occured (%s): %s" % (
+                jresp.get('error', None),
+                jresp.get('error_description', None))
+            self.terror(err, transactionID)
             raise base.UnauthenticatedError(err)
-        msg = 'Access token not found - provider responded with: %s'
-        logger.debug(msg % repr(jresp))
-        return None
+        self.terror("Access token not found - provider responded with: %s",
+                    transactionID, repr(jresp))

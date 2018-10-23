@@ -21,12 +21,11 @@ from pecan import request
 from pecan.core import redirect
 
 from cauth.auth import base
-
-
-logger = logging.getLogger(__name__)
+from cauth.utils import transaction
 
 
 class BaseHTTPdModuleAuthPlugin(base.AuthProtocolPlugin):
+    log = logging.getLogger("cauth.BaseHTTPdModuleAuthPlugin")
 
     """This authentication plugin expects the flow to be handled by a HTTPd
     module (for example mod_auth_mellon). The module sets environment
@@ -48,19 +47,22 @@ class BaseHTTPdModuleAuthPlugin(base.AuthProtocolPlugin):
         if 'endpoint_redirect' not in auth_context:
             redirect('%s' % (self._config_section))
         else:
-            return self._authenticate()
+            return self._authenticate(**auth_context)
 
-    def _authenticate(self):
+    def _authenticate(self, **auth_context):
+        transactionID = transaction.ensure_tid(auth_context)
         mapping = self.conf['mapping']
+        self.tdebug('environment variables: %s',
+                    transactionID, repr(request.environ))
         try:
             username = request.environ[mapping['login']]
             email = request.environ[mapping['email']]
             fullname = request.environ[mapping['fullname']]
             external_id = request.environ[mapping['uid']]
         except KeyError as e:
-            msg = 'Invalid mapping data: %s' % e
-            logger.error(msg)
-            raise base.UnauthenticatedError(msg)
+            self.terror("Invalid mapping %s",
+                        transactionID, e)
+            raise base.UnauthenticatedError("Invalid mapping")
         ssh_keys = []
         if 'ssh_keys' in mapping.to_dict():
             idp_keys = request.environ[mapping['ssh_keys']]

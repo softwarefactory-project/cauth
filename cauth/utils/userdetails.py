@@ -22,10 +22,8 @@ from pecan import conf
 
 from cauth.service import base
 from cauth.model import db as auth_map
+from cauth.utils import transaction
 from cauth.utils import exceptions
-
-
-logger = logging.getLogger(__name__)
 
 
 def differentiate(login, domain, uid):
@@ -33,7 +31,9 @@ def differentiate(login, domain, uid):
     return login + '_' + suffix[:6]
 
 
-class UserDetailsCreator:
+class UserDetailsCreator(transaction.TransactionLogger):
+    log = logging.getLogger("cauth.UserDetailsCreator")
+
     def __init__(self, conf):
         self.services = []
         for service in conf.services:
@@ -45,10 +45,11 @@ class UserDetailsCreator:
                     invoke_args=(conf,)).driver
                 self.services.append(plugin)
             except base.ServiceConfigurationError as e:
-                logger.error(e.message)
+                self.logger.error(e.message)
 
     def create_user(self, user):
         external_info = user.get('external_auth', {})
+        transactionID = user.get('transactionID', '')
         c_id = -1
         # skip if authenticating with an API key
         if external_info:
@@ -62,27 +63,27 @@ class UserDetailsCreator:
                 except exceptions.UsernameConflictException as e:
                     strategy = conf.auth.get('login_collision_strategy')
                     if strategy == 'DIFFERENTIATE':
-                        msg = ('login "%s" already registered for domain '
-                               '%s, uid %s, differentiating login as %s')
                         old_login = user['login']
                         user['login'] = differentiate(
                             user['login'],
                             external_info.get('domain', ''),
                             external_info['external_id'])
                         external_info['username'] = user['login']
-                        msg = msg % (old_login,
-                                     e.external_auth_details['domain'],
-                                     e.external_auth_details['external_id'],
-                                     user['login'],)
-                        logger.info(msg)
+                        self.tinfo(
+                            "Loging \"%s\" already registered for domain "
+                            "%s, uid %s, differentiating login as %s",
+                            transactionID, old_login,
+                            e.external_auth_details['domain'],
+                            e.external_auth_details['external_id'],
+                            user['login'])
                         c_id = auth_map.get_or_create_authenticated_user(
                             **external_info)
                     elif strategy == 'FORBID':
                         raise
                     else:
-                        msg = ('Incorrect login collision strategy '
-                               '"%s", defaulting to "FORBID"')
-                        logger.info(msg % strategy)
+                        self.terror("Incorrect login collision strategy "
+                                    "\"%s\", defaulting to \"FORBID\"",
+                                    transactionID, strategy)
                         raise
             del user['external_auth']
             user['external_id'] = c_id
@@ -90,7 +91,6 @@ class UserDetailsCreator:
             try:
                 service.register_new_user(user)
             except base.UserRegistrationError as e:
-                logger.info('When adding user %s (ID %s): %s' % (user['login'],
-                                                                 c_id,
-                                                                 e.message))
+                self.texception('Error when adding user %s (ID %s)',
+                                transactionID, user['login'], c_id)
         return c_id

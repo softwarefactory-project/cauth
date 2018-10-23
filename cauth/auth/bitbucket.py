@@ -25,13 +25,11 @@ from cauth.auth import base, oauth2
 """BitBucket OAuth2 API authentication plugin."""
 
 
-logger = logging.getLogger(__name__)
-
-
 class BitBucketAuthPlugin(oauth2.BaseOAuth2Plugin):
     """Allows a bitbucket user to authenticate with the OAuth protocol.
     """
 
+    log = logging.getLogger("cauth.BitBucketAuthPlugin")
     provider = "BitBucket"
 
     _config_section = "bitbucket"
@@ -50,33 +48,37 @@ class BitBucketAuthPlugin(oauth2.BaseOAuth2Plugin):
         # bitbucket uuid is between brackets, we do not want that
         return user_data.get('uuid')[1:-1] or user_data.get('username')
 
-    def get_user_data(self, token):
-
+    def get_user_data(self, token, transactionID):
         user_url = ("https://api.bitbucket.org/2.0/user?access_token=%s")
+        self.tdebug('Fetching user info at %s',
+                    transactionID, user_url % '<REDACTED>')
         resp = requests.get(user_url % quote(token, safe=''))
         if not resp.ok:
-            logger.error(user_url % '<REDACTED>')
             if resp.json():
                 data = resp.json()
                 error = data.get("error", {}).get("message", "Unknown error")
             else:
                 error = repr(resp)
+            self.terror('Error fetching user info: %s',
+                        transactionID, error)
             raise base.UnauthenticatedError(error)
         data = resp.json()
         login = data.get('username')
         name = data.get('display_name')
         external_id = self.get_provider_id(data)
-
         email_url = ("https://api.bitbucket.org"
                      "/2.0/user/emails?access_token=%s")
+        self.tdebug('Fetching email info at %s',
+                    transactionID, email_url % '<REDACTED>')
         resp = requests.get(email_url % quote(token, safe=''))
         if not resp.ok:
-            logger.error(email_url % '<REDACTED>')
             if resp.json():
                 data = resp.json()
                 error = data.get("error", {}).get("message", "Unknown error")
             else:
                 error = repr(resp)
+            self.terror('Error fetching email info: %s',
+                        transactionID, error)
             raise base.UnauthenticatedError(error)
         data = resp.json()
         emails = data.get('values', [])
@@ -87,25 +89,28 @@ class BitBucketAuthPlugin(oauth2.BaseOAuth2Plugin):
 
         ssh_url = ("https://api.bitbucket.org"
                    "/1.0/users/%s/ssh-keys?access_token=%s")
+        self.tdebug('Fetching ssh info at %s',
+                    transactionID, ssh_url % (quote(login), '<REDACTED>'))
         resp = requests.get(ssh_url % (quote(login), quote(token, safe='')))
         if not resp.ok:
-            logger.error(ssh_url % (quote(login), '<REDACTED>'))
             if resp.json():
                 data = resp.json()
                 error = data.get("error", {}).get("message", "Unknown error")
             else:
                 error = repr(resp)
+            self.terror('Error fetching ssh info: %s',
+                        transactionID, error)
             raise base.UnauthenticatedError(error)
         keys = resp.json()
         ssh_keys = []
         for k in keys:
             ssh_keys.append({'key': k.get('key')})
-        logger.info(
-            'Client %s (%s) authenticated through BitBucket API'
-            % (login, email))
+        self.tinfo("Client %s (%s) authenticated through BitBucket API",
+                   transactionID, login, email)
         return {'login': login,
                 'email': email,
                 'name': name,
                 'ssh_keys': ssh_keys,
                 'external_auth': {'domain': self.get_domain(),
-                                  'external_id': external_id}}
+                                  'external_id': external_id},
+                'transactionID': transactionID}
