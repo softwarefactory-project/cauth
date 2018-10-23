@@ -16,7 +16,9 @@
 
 
 import abc
+import hashlib
 import six
+import time
 
 
 class AuthProtocolNotAvailableError(Exception):
@@ -73,3 +75,9 @@ class AuthProtocolPlugin(object):
         """returns a conf value specific to the authentication method acting
         as a namespace. Typically, it will be return the configured
         authentication endpoint url."""
+
+    def init_transactionID(self, **kwargs):
+        """This method returns a unique transaction ID so that authentication
+        steps are easier to follow in logs."""
+        x = kwargs.get('hashable', str(time.time()))
+        return hashlib.md5(x).hexdigest()

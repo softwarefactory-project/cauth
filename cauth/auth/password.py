@@ -51,6 +51,8 @@ class LocalUserAuthPlugin(BasePasswordAuthPlugin):
     _config_section = "users"
 
     def authenticate(self, **auth_context):
+        transactionID = self.init_transactionID()
+        transactionHeader = '[transaction ID: %s]' % transactionID
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
         user = self.conf.get(username)
@@ -63,7 +65,8 @@ class LocalUserAuthPlugin(BasePasswordAuthPlugin):
                         'ssh_keys': [],
                         'external_auth': {'domain': self.get_domain(),
                                           'external_id': username}}
-        err = '%s not found in local config file' % username
+        err = '%s %s not found in local config file' % (transactionHeader,
+                                                        username)
         raise base.UnauthenticatedError(err)
 
     def get_domain(self):
@@ -80,23 +83,37 @@ class LDAPAuthPlugin(BasePasswordAuthPlugin):
         return self.conf['host']
 
     def authenticate(self, **auth_context):
+        transactionID = self.init_transactionID()
+        transactionHeader = '[transaction ID: %s]' % transactionID
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
+        logger.debug(
+            '%s Initializing LDAP connection' % transactionHeader
+        )
         try:
             conn = ldap.initialize(self.conf['host'])
             conn.set_option(ldap.OPT_REFERRALS, 0)
         except ldap.LDAPError as e:
-            logger.error('Client unable to bind on LDAP: %s' % e.message)
-            raise base.UnauthenticatedError(e.message)
+            msg = '%s Client unable to bind on LDAP%s'
+            logger.error(
+                 msg % (transactionHeader, ': %s' % e.message))
+            raise base.UnauthenticatedError(msg % (transactionHeader, ''))
         if not password or not username:
-            logger.error('Client unable to bind on LDAP empty credentials.')
-            raise base.UnauthenticatedError('invalid credentials')
+            msg = '%s Client unable to bind on LDAP empty credentials.'
+            logger.error(msg % transactionHeader)
+            raise base.UnauthenticatedError(
+                '%s empty credentials' % transactionHeader)
         who = self.conf['dn'] % {'username': username}
+        logger.debug(
+            '%s attempting LDAP binding' % transactionHeader
+        )
         try:
             conn.simple_bind_s(who, password)
         except (ldap.INVALID_CREDENTIALS, ldap.SERVER_DOWN):
-            logger.error('Client unable to bind on LDAP invalid credentials.')
-            raise base.UnauthenticatedError('invalid credentials')
+            msg = '%s Client unable to bind on LDAP due to invalid credentials'
+            logger.error(msg % transactionHeader)
+            raise base.UnauthenticatedError(
+                '%s invalid credentials' % transactionHeader)
 
         basedn = self.conf.get('basedn', who)
         sfilter = self.conf.get('sfilter', '(cn=*)') % {'username': username}
@@ -113,8 +130,10 @@ class LDAPAuthPlugin(BasePasswordAuthPlugin):
                     'external_auth': {'domain': self.get_domain(),
                                       'external_id': who}}
 
-        logger.error('LDAP client search failed')
-        raise base.UnauthenticatedError('LDAP client search failed')
+        logger.error(
+            '%s LDAP client search failed' % transactionHeader)
+        raise base.UnauthenticatedError(
+            '%s LDAP client search failed' % transactionHeader)
 
 
 class ManageSFAuthPlugin(BasePasswordAuthPlugin):
@@ -124,16 +143,22 @@ class ManageSFAuthPlugin(BasePasswordAuthPlugin):
     _config_section = "localdb"
 
     def authenticate(self, **auth_context):
+        transactionID = self.init_transactionID()
+        transactionHeader = '[transaction ID: %s]' % transactionID
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
         bind_url = urllib.basejoin(self.conf['managesf_url'], '/bind')
         headers = {"Authorization": encode(username.encode('utf8'),
                                            password.encode('utf8'))}
+        logger.debug(
+            '%s binding to manageSF' % transactionHeader
+        )
         response = requests.get(bind_url, headers=headers)
 
         if response.status_code > 399:
-            logger.error('localdb auth failed: %s' % response)
-            raise base.UnauthenticatedError(response)
+            msg = '%s localdb auth failed%s'
+            logger.error(msg % (transactionHeader, ': %s' % response))
+            raise base.UnauthenticatedError(msg % (transactionHeader, ''))
         infos = response.json()
         return {'login': username,
                 'email': infos['email'],
@@ -160,10 +185,15 @@ class KeystoneAuthPlugin(BasePasswordAuthPlugin):
     def authenticate(self, **auth_context):
         """Authentication against a keystone server. We simply try to fetch an
         unscoped token."""
+        transactionID = self.init_transactionID()
+        transactionHeader = '[transaction ID: %s]' % transactionID
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
         auth_url = self.conf['auth_url']
         if kc:
+            logger.debug(
+                '%s connecting to keystone server' % transactionHeader
+            )
             try:
                 client = kc.client.Client(auth_url=auth_url,
                                           username=username,
@@ -182,17 +212,20 @@ class KeystoneAuthPlugin(BasePasswordAuthPlugin):
                             'external_auth': {'domain': self.get_domain(),
                                               'external_id': external_id}}
             except kc.exceptions.Unauthorized:
-                msg = ("keystone authentication failed: "
+                msg = ("%s keystone authentication failed: "
                        "Invalid user or password")
-                raise base.UnauthenticatedError(msg)
+                raise base.UnauthenticatedError(msg % transactionHeader)
             except Exception as e:
-                raise base.UnauthenticatedError("Unknown error: %s" % e)
+                msg = "%s Unknown error%s"
+                logger.debug(msg % (transactionHeader, ': %s' % e))
+                raise base.UnauthenticatedError(
+                     msg % (transactionHeader, ''))
         else:
-            msg = "keystone authentication not available on this server"
-            raise base.UnauthenticatedError(msg)
+            msg = "%s keystone authentication not available on this server"
+            raise base.UnauthenticatedError(msg % transactionHeader)
         # every other case
-        msg = ("keystone authentication failed")
-        raise base.UnauthenticatedError(msg)
+        msg = ("%s keystone authentication failed")
+        raise base.UnauthenticatedError(msg % transactionHeader)
 
 
 class PasswordAuthPlugin(BasePasswordAuthPlugin):

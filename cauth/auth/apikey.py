@@ -47,12 +47,20 @@ class APIKeyAuthPlugin(base.AuthProtocolPlugin):
         return {'api_key': {'description': 'the user API key'}, }
 
     def authenticate(self, **auth_context):
+        transactionID = self.init_transactionID()
+        transactionHeader = '[transaction ID: %s]' % transactionID
+        logger.debug(
+            '%s Attempting authentication by API key' % transactionHeader)
         api_key = auth_context.get('api_key', None)
         if not api_key:
+            logger.debug(
+                '%s Missing API key' % transactionHeader)
             raise base.UnauthenticatedError('Missing API key')
         # do we have the key ?
         cauth_id = db.get_cauth_id_from_api_key(api_key)
         if not cauth_id:
+            logger.debug(
+                '%s API key not found' % transactionHeader)
             raise base.UnauthenticatedError('API key not found')
         # fetch the user info from manageSF
         url = urllib.basejoin(
@@ -64,14 +72,15 @@ class APIKeyAuthPlugin(base.AuthProtocolPlugin):
         ticket = create_ticket(uid='admin',
                                validuntil=validity)
         cookie = {'auth_pubtkt': urllib.quote_plus(ticket)}
-        msg = 'Retrieving user info from %s for cauth_id %s ...'
-        logger.debug(msg % (self.conf['url'], cauth_id))
+        msg = '%s Retrieving user info from %s for cauth_id %s ...'
+        logger.debug(msg % (transactionHeader, self.conf['url'], cauth_id))
         resp = requests.get(url, headers=headers,
                             cookies=cookie)
         if resp.status_code > 399:
-            msg = 'manageSF responded with %i: "%s"' % (resp.status_code,
-                                                        resp.text)
-            logger.error(msg)
+            msg = '%s manageSF responded with error %i: "%s"'
+            logger.error(msg % (transactionHeader,
+                                resp.status_code,
+                                resp.text))
             raise base.UnauthenticatedError(msg)
         user_info = {'login': resp.json()['username'],
                      'email': resp.json()['email'],
@@ -79,9 +88,10 @@ class APIKeyAuthPlugin(base.AuthProtocolPlugin):
                      'ssh_keys': [],
                      'external_auth': {'domain': self.get_domain(),
                                        'external_id': cauth_id}}
-        msg = u"cauth id %s for user %s (%s) authenticated " +\
+        msg = u"%s cauth id %s for user %s (%s) authenticated " +\
               u"successfully with API key"
-        logger.info(msg % (cauth_id, user_info['login'], user_info['email']))
+        logger.info(msg % (transactionHeader, cauth_id,
+                           user_info['login'], user_info['email']))
         return user_info
 
     def get_domain(self):

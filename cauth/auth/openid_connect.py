@@ -65,23 +65,32 @@ class OpenIDConnectAuthPlugin(base.AuthProtocolPlugin):
 
     def _redirect(self, back, response):
         """Send the user to the OpenID Connect auth page"""
+        state = db.put_url(back, "openid_connect")
+        # use this as the seed for the transaction ID
+        transactionID = self.init_transactionID(hashable=str(state))
+        transactionHeader = '[transaction ID: %s]' % transactionID
         client = self._get_client()
         response.status_code = 302
         response.location = client.construct_AuthorizationRequest(
             request_args={
                 "response_type": ["code"],
                 "response_mode": "query",
-                "state": db.put_url(back, "openid_connect"),
+                "state": state,
                 "redirect_uri": self.conf["redirect_uri"],
                 "scope": ["openid", "profile"],
                 "client_id": self.conf["client_id"],
             }).request(client.authorization_endpoint)
-        logger.debug("Redirecting to %s" % response.location)
+        logger.debug("%s Redirecting to %s" % (transactionHeader,
+                                               response.location))
 
     def _authenticate(self, state, code, query_string):
         """Validate callback code and retrieve user info"""
+        transactionID = self.init_transactionID(hashable=str(state))
+        transactionHeader = '[transaction ID: %s]' % transactionID
         if not code:
-            raise base.UnauthenticatedError('Invalid OAuth code')
+            msg = '%s Invalid OAuth code' % transactionHeader
+            logger.error(msg)
+            raise base.UnauthenticatedError(msg)
 
         # Check query_string
         client = self._get_client()
@@ -90,9 +99,12 @@ class OpenIDConnectAuthPlugin(base.AuthProtocolPlugin):
                                   info=query_string,
                                   sformat="urlencoded")
         except Exception as e:
-            logger.error("Couldn't parse callback response (%s)" % repr(e))
-            logger.debug("QueryString error '%s'" % query_string)
-            raise base.UnauthenticatedError('Invalid callback query string')
+            msg = "%s Couldn't parse callback response (%s)"
+            logger.error(msg % (transactionHeader, repr(e)))
+            logger.debug("%s QueryString error '%s'" % (transactionHeader,
+                                                        query_string))
+            raise base.UnauthenticatedError(
+                '%s Invalid callback query string' % transactionHeader)
 
         # Request token
         try:
@@ -108,8 +120,10 @@ class OpenIDConnectAuthPlugin(base.AuthProtocolPlugin):
                 }
             )
         except Exception as e:
-            logger.error("Couldn't obtain user token (%s)" % repr(e))
-            raise base.UnauthenticatedError('Couldn\'t fetch user-info')
+            msg = "%s Couldn't obtain user token (%s)"
+            logger.error(msg % (transactionHeader, repr(e)))
+            raise base.UnauthenticatedError(
+                '%s Couldn\'t fetch user-info' % transactionHeader)
 
         user_info = token.to_dict().get("id_token")
         if not isinstance(user_info, dict):
@@ -125,9 +139,13 @@ class OpenIDConnectAuthPlugin(base.AuthProtocolPlugin):
         uid = user_info.get(field_mapping.get('uid'))
         ssh_keys = user_info.get(field_mapping.get('ssh_keys'), [])
         if not login or not email or '@' not in email or not name or not uid:
-            logger.error("Invalid user token or mapping")
-            logger.debug("User token error '%s'" % user_info)
-            raise base.UnauthenticatedError('Couldn\'t decode token')
+            logger.error(
+                "%s Invalid user token or mapping" % transactionHeader)
+            logger.debug(
+                "%s User token error '%s'" % (transactionHeader,
+                                              user_info))
+            raise base.UnauthenticatedError(
+                '%s Couldn\'t decode token' % transactionHeader)
 
         # All the user info we need are in the token, no need to request more
         # info = client.do_user_info_request(token = token["access_token"])
@@ -142,8 +160,15 @@ class OpenIDConnectAuthPlugin(base.AuthProtocolPlugin):
 
     def authenticate(self, **context):
         if context.get('calling_back', False):
+            state = context["state"]
+            transactionID = self.init_transactionID(hashable=str(state))
+            transactionHeader = '[transaction ID: %s]' % transactionID
+            logger.debug(
+                '%s Incoming callback from %s' % (transactionHeader,
+                                                  self.get_domain())
+            )
             return self._authenticate(
-                context["state"],
+                state,
                 context.get("code"),
                 request.query_string)
         else:
