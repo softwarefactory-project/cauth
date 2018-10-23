@@ -45,39 +45,53 @@ class BitBucketAuthPlugin(oauth2.BaseOAuth2Plugin):
         error_description = auth_context.get('error_description', None)
         return error, error_description
 
-    def get_provider_id(self, user_data):
+    def get_provider_id(self, user_data, transactionHeader=None):
         """Return a provider-specific unique id from the user data."""
         # bitbucket uuid is between brackets, we do not want that
         return user_data.get('uuid')[1:-1] or user_data.get('username')
 
-    def get_user_data(self, token):
-
+    def get_user_data(self, token, transactionHeader):
         user_url = ("https://api.bitbucket.org/2.0/user?access_token=%s")
+        logger.debug(
+            '%s Fetching user info at %s' % (transactionHeader,
+                                             user_url % '<REDACTED>')
+        )
         resp = requests.get(user_url % quote(token, safe=''))
         if not resp.ok:
-            logger.error(user_url % '<REDACTED>')
             if resp.json():
                 data = resp.json()
                 error = data.get("error", {}).get("message", "Unknown error")
             else:
                 error = repr(resp)
-            raise base.UnauthenticatedError(error)
+            logger.error(
+                '%s Error fetching user info: %s' % (transactionHeader,
+                                                     error)
+            )
+            raise base.UnauthenticatedError('%s %s' % (transactionHeader,
+                                                       error))
         data = resp.json()
         login = data.get('username')
         name = data.get('display_name')
         external_id = self.get_provider_id(data)
-
         email_url = ("https://api.bitbucket.org"
                      "/2.0/user/emails?access_token=%s")
+        logger.debug(
+            '%s Fetching email info at %s' % (transactionHeader,
+                                              email_url % '<REDACTED>')
+        )
         resp = requests.get(email_url % quote(token, safe=''))
         if not resp.ok:
-            logger.error(email_url % '<REDACTED>')
             if resp.json():
                 data = resp.json()
                 error = data.get("error", {}).get("message", "Unknown error")
             else:
                 error = repr(resp)
-            raise base.UnauthenticatedError(error)
+            logger.error(
+                '%s Error fetching email info: %s' % (transactionHeader,
+                                                      error)
+            )
+            raise base.UnauthenticatedError('%s %s' % (transactionHeader,
+                                                       error))
         data = resp.json()
         emails = data.get('values', [])
         for e_data in emails:
@@ -87,22 +101,31 @@ class BitBucketAuthPlugin(oauth2.BaseOAuth2Plugin):
 
         ssh_url = ("https://api.bitbucket.org"
                    "/1.0/users/%s/ssh-keys?access_token=%s")
+        logger.debug(
+            '%s Fetching ssh info at %s' % (transactionHeader,
+                                            ssh_url % (quote(login),
+                                                       '<REDACTED>'))
+        )
         resp = requests.get(ssh_url % (quote(login), quote(token, safe='')))
         if not resp.ok:
-            logger.error(ssh_url % (quote(login), '<REDACTED>'))
             if resp.json():
                 data = resp.json()
                 error = data.get("error", {}).get("message", "Unknown error")
             else:
                 error = repr(resp)
-            raise base.UnauthenticatedError(error)
+            logger.error(
+                '%s Error fetching ssh info: %s' % (transactionHeader,
+                                                    error)
+            )
+            raise base.UnauthenticatedError('%s %s' % (transactionHeader,
+                                                       error))
         keys = resp.json()
         ssh_keys = []
         for k in keys:
             ssh_keys.append({'key': k.get('key')})
         logger.info(
-            'Client %s (%s) authenticated through BitBucket API'
-            % (login, email))
+            '%s Client %s (%s) authenticated through BitBucket API'
+            % (transactionHeader, login, email))
         return {'login': login,
                 'email': email,
                 'name': name,
