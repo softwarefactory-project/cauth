@@ -57,7 +57,7 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
         try:
             resp = requests.get(url, headers=headers, timeout=5)
         except Exception as exc:
-            logger.info(
+            logger.error(
                 "Skip user %s registration, repoxplorer backend down (%s)" % (
                     urllib.quote_plus(user["login"]), exc))
             return
@@ -85,7 +85,7 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
             for e in to_add:
                 _user["emails"].append({'email': e})
         else:
-            logger.info(
+            logger.error(
                 "Skip user %s registration, unexpected status code (%s)" % (
                     urllib.quote_plus(user["login"]), resp.status_code))
             return
@@ -96,7 +96,7 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
         try:
             resp = req(url, data=data, headers=headers, timeout=5)
         except Exception as exc:
-            logger.info(
+            logger.error(
                 "Skip user %s registration, repoxplorer backend down (%s)" % (
                     urllib.quote_plus(user["login"]), exc))
             return

@@ -55,7 +55,8 @@ class UserDetailsCreator:
             try:
                 service.register_new_user(user)
             except base.UserRegistrationError as e:
-                logger.info('When adding user %s (ID %s): %s' % (user['login'],
-                                                                 c_id,
-                                                                 e.message))
+                logger.error(
+                    'When adding user %s (ID %s): %s' % (user['login'],
+                                                         c_id,
+                                                         e.message))
         return c_id
