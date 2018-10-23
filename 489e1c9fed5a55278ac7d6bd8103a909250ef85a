@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de416f4a_893d0a07",
+        "filename": "cauth/model/db.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-10-23T12:35:37Z",
+      "side": 1,
+      "message": "Few comments to ease the understanding would have been nice.",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 132,
+        "endChar": 28
+      },
+      "revId": "489e1c9fed5a55278ac7d6bd8103a909250ef85a",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
