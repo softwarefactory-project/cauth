@@ -73,7 +73,7 @@ class GerritServicePlugin(base.BaseServicePlugin):
         resp = requests.put(url, json={'http_password': password},
                             auth=("admin", self.conf["password"]))
         if resp.ok:
-            logger.info('Set http password of %s' % user)
+            logger.debug('Set http password of %s' % user)
         else:
             msg = 'Failed to add http password of %s: %s' % (user, resp)
             logger.error(msg)
@@ -86,7 +86,7 @@ class GerritServicePlugin(base.BaseServicePlugin):
         resp = requests.delete(url, json={'generate': True},
                                auth=("admin", self.conf["password"]))
         if resp.ok:
-            logger.info('Removed http password of %s' % user)
+            logger.debug('Removed http password of %s' % user)
         else:
             msg = 'Failed to remove http password of %s: %s' % (user, resp)
             logger.error(msg)
