@@ -50,7 +50,9 @@ class OpenIDAuthPlugin(base.AuthProtocolPlugin):
 
     def redirect(self, back, response):
         """Send the user to the OpenID auth page"""
-        params = {'back': back}
+        transactionID = self.init_transactionID()
+        params = {'back': back,
+                  'transactionID': transactionID}
         response.status_code = 302
         return_to = request.host_url + self.conf['redirect_uri']
         return_to += "?" + urllib.urlencode(params)
@@ -80,12 +82,20 @@ class OpenIDAuthPlugin(base.AuthProtocolPlugin):
                                       "namePerson/friendly",
             "openid.ext2.required": "Alias,FirstName,LastName,Email"
         }
-
+        transactionHeader = '[transaction ID: %s]' % transactionID
+        logger.debug(
+            '%s Redirecting user to %s' % (transactionHeader,
+                                           self.conf['auth_url'])
+        )
         response.location = self.conf['auth_url'] + "?" + \
             urllib.urlencode(openid_params)
 
     def verify_data(self, auth_context):
-        logger.debug('Verifying OpenID auth data %r' % auth_context)
+        transactionID = auth_context['transactionID']
+        transactionHeader = '[transaction ID: %s]' % transactionID
+        logger.debug(
+            '%s Verifying OpenID auth data %r' % (transactionHeader,
+                                                  auth_context))
         verify_params = auth_context.copy()
         verify_params["openid.mode"] = "check_authentication"
         verify_response = requests.post(self.conf['auth_url'],
@@ -100,24 +110,32 @@ class OpenIDAuthPlugin(base.AuthProtocolPlugin):
                       'openid.sreg.email',
                       'openid.sreg.fullname', ]:
                 if i not in verify_params or not verify_params[i]:
-                    msg = 'User must share %s' % i.split('.')[-1]
+                    msg = '%s User must share %s' % (transactionHeader,
+                                                     i.split('.')[-1])
+                    logger.debug(msg)
+                    logger.debug('%s authentication ended '
+                                 'with failure' % transactionHeader)
                     raise base.UnauthenticatedError(msg)
-            logger.debug('OpenID auth data verified')
+            logger.debug('%s OpenID auth data verified' % transactionHeader)
         else:
-            msg = 'Invalid user data according to %s' % self.conf['auth_url']
+            msg = '%s Invalid user data' % transactionHeader
+            logger.debug(msg + ': %r' % verify_response)
             raise base.UnauthenticatedError(msg)
 
     def _authenticate(self, **auth_context):
         """Called at the callback level"""
         self.verify_data(auth_context)
+        transactionID = auth_context['transactionID']
+        transactionHeader = '[transaction ID: %s]' % transactionID
+        del auth_context['transactionID']
         ssh_keys = []
         login = auth_context['openid.sreg.nickname']
         email = auth_context['openid.sreg.email']
         name = auth_context['openid.sreg.fullname']
         external_id = auth_context['openid.claimed_id']
         logger.info(
-            'Client %s (%s) authenticated through OpenID'
-            % (login, email))
+            '%s Client %s (%s) authenticated through OpenID'
+            % (transactionHeader, login, email))
         return {'login': login,
                 'email': email,
                 'name': name,

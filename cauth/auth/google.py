@@ -48,19 +48,24 @@ class GoogleAuthPlugin(oauth2.BaseOAuth2Plugin):
         """Return a provider-specific unique id from the user data."""
         return user_data.get('id') or user_data.get('nickname')
 
-    def get_user_data(self, token):
+    def get_user_data(self, token, transactionHeader=None):
 
         user_url = ("https://www.googleapis.com"
                     "/plus/v1/people/me?access_token=%s")
+        logger.debug(
+            '%s Fetching user data at %s' % (transactionHeader,
+                                             user_url % '<REDACTED>')
+        )
         resp = requests.get(user_url % token)
         if not resp.ok:
-            logger.error(user_url % '<REDACTED>')
             if resp.json():
                 data = resp.json()
                 error = data.get("error", {}).get("message", "Unknown error")
             else:
                 error = repr(resp)
-            raise base.UnauthenticatedError(error)
+            msg = '%s Failed to access user data%s'
+            logger.error(msg % (transactionHeader, ': %s' % error))
+            raise base.UnauthenticatedError(msg % (transactionHeader, ''))
         data = resp.json()
         name = (data.get('name', {}).get('givenName', '') + ' ' +
                 data.get('name', {}).get('familyName', '')).strip()
@@ -80,8 +85,8 @@ class GoogleAuthPlugin(oauth2.BaseOAuth2Plugin):
         if not name:
             name = login
         logger.info(
-            'Client %s (%s) authenticated through Google API'
-            % (login, email))
+            '%s Client %s (%s) authenticated through Google API'
+            % (transactionHeader, login, email))
         return {'login': login,
                 'email': email,
                 'name': name,

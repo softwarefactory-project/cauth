@@ -72,7 +72,7 @@ class BaseLoginController(RestController):
                                         message=msg))
             return response.body
         try:
-            logger.info('%s plugin loaded' % auth_method)
+            logger.debug('%s plugin loaded' % auth_method)
             valid_user = auth_plugin.authenticate(**auth_context)
         except base.UnauthenticatedError:
             response.status = 401
@@ -86,7 +86,7 @@ class BaseLoginController(RestController):
 
     @expose()
     def post(self, **kwargs):
-        logger.info('Client requests authentication.')
+        logger.debug('Client requests authentication.')
         try:
             auth_info = request.json
             self._json_login(auth_info)
@@ -98,6 +98,6 @@ class BaseLoginController(RestController):
     @expose(template='login.html')
     def get(self, **kwargs):
         back = kwargs.get('back', '/auth/logout')
-        logger.info('Client requests the login page.')
+        logger.debug('Client requests the login page.')
         auth_methods = [k for k, v in conf.get('auth', {})]
         return dict(back=back, message='', auth_methods=auth_methods)
