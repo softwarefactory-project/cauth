@@ -627,7 +627,7 @@ class TestGoogleAuthPlugin(BaseTestAuthPlugin):
             get.return_value = FakeResponse(200,
                                             content=google_output,
                                             is_json=True)
-            user = self.driver.get_user_data(token='MYTOKEN')
+            user = self.driver.get_user_data('MYTOKEN')
             get.assert_called_with("https://www.googleapis.com/plus/"
                                    "v1/people/me?access_token=MYTOKEN")
             self.assertEqual("dio.brando",
@@ -689,7 +689,7 @@ class TestBitBucketAuthPlugin(BaseTestAuthPlugin):
 
         with patch('requests.get') as get:
             get.side_effect = fake_get
-            user = self.driver.get_user_data(token='MYTOKEN')
+            user = self.driver.get_user_data('MYTOKEN', transactionHeader='')
             self.assertEqual("JoJo",
                              user.get('login'))
             self.assertEqual("Joseph Joestar",

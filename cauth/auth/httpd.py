@@ -51,21 +51,30 @@ class BaseHTTPdModuleAuthPlugin(base.AuthProtocolPlugin):
             return self._authenticate()
 
     def _authenticate(self):
+        transactionID = self.init_transactionID()
+        transactionHeader = '[transaction ID: %s]' % transactionID
         mapping = self.conf['mapping']
+        logger.debug(
+            '%s environment variables: %s' % (transactionHeader,
+                                              repr(request.environ)))
         try:
             username = request.environ[mapping['login']]
             email = request.environ[mapping['email']]
             fullname = request.environ[mapping['fullname']]
             external_id = request.environ[mapping['uid']]
         except KeyError as e:
-            msg = 'Invalid mapping data: %s' % e
-            logger.error(msg)
-            raise base.UnauthenticatedError(msg)
+            msg = '%s Invalid mapping data%s'
+            logger.error(msg % (transactionHeader, ': %s' % e))
+            raise base.UnauthenticatedError(msg % (transactionHeader, ''))
         ssh_keys = []
         if 'ssh_keys' in mapping.to_dict():
             idp_keys = request.environ[mapping['ssh_keys']]
             for key in idp_keys.split(self.conf.get('key_delimiter', ',')):
                 ssh_keys.append({'key': key})
+        logger.info(
+            '%s %s successfully authenticated' % (transactionHeader,
+                                                  username)
+        )
         return {'login': username,
                 'email': email,
                 'name': fullname,
