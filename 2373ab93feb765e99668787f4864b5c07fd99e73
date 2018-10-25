@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c524543c_0b17c69f",
+        "filename": "cauth/auth/apikey.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2018-10-25T09:50:46Z",
+      "side": 1,
+      "message": "Why not using logger.error here?",
+      "range": {
+        "startLine": 56,
+        "startChar": 19,
+        "endLine": 56,
+        "endChar": 24
+      },
+      "revId": "2373ab93feb765e99668787f4864b5c07fd99e73",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b149a885_1f159ac6",
+        "filename": "cauth/auth/apikey.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2018-10-25T09:50:46Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 62,
+        "startChar": 19,
+        "endLine": 62,
+        "endChar": 24
+      },
+      "revId": "2373ab93feb765e99668787f4864b5c07fd99e73",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
