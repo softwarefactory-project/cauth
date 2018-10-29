@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93ad7e8f_99784e78",
+        "filename": "cauth/auth/password.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2018-10-29T08:11:39Z",
+      "side": 1,
+      "message": "This could be info or even warning",
+      "range": {
+        "startLine": 297,
+        "startChar": 15,
+        "endLine": 297,
+        "endChar": 20
+      },
+      "revId": "6f1189e711de4d91960ecd2e36501d9866cdbf50",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44234fd7_d2661581",
+        "filename": "cauth/auth/password.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2018-10-29T08:11:39Z",
+      "side": 1,
+      "message": "To keep the transaction ID consistent for interleave message, perhaps we could append \"--\".join(errors) to the existing message.",
+      "range": {
+        "startLine": 299,
+        "startChar": 0,
+        "endLine": 300,
+        "endChar": 38
+      },
+      "revId": "6f1189e711de4d91960ecd2e36501d9866cdbf50",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3f19d76_98d15be7",
+        "filename": "cauth/service/repoxplorer.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2018-10-29T08:11:39Z",
+      "side": 1,
+      "message": "shouldn\u0027t error be used for true error? It seems like these message would better be warning",
+      "range": {
+        "startLine": 60,
+        "startChar": 19,
+        "endLine": 60,
+        "endChar": 24
+      },
+      "revId": "6f1189e711de4d91960ecd2e36501d9866cdbf50",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
