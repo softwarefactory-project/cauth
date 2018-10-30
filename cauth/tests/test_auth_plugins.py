@@ -18,6 +18,7 @@
 import crypt
 import json
 import ldap
+import os
 import tempfile
 from contextlib import nested
 from unittest import TestCase
@@ -147,7 +148,12 @@ class TestDrivers(BaseTestAuthPlugin):
 class TestPasswordAuthPlugin(BaseTestAuthPlugin):
     def test_users_auth(self):
         """Test password authentication with local users only"""
+        test_key = tempfile.mkstemp()[1]
+        key_contents = 'AAAA... test@sf'
+        with open(test_key, 'w') as k:
+            k.write(key_contents)
         conf = {'auth': {'users': TEST_USERS_AUTH, }, }
+        conf['auth']['users']['user1']['ssh_key_path'] = test_key
         driver = self._load_auth_plugin('Password', conf)
         # assert the driver has loaded only one plugin
         self.assertEqual(1,
@@ -160,7 +166,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
         expected = {'login': 'user1',
                     'email': 'user@tests.dom',
                     'name': 'example user',
-                    'ssh_keys': [],
+                    'ssh_keys': [key_contents, ],
                     'external_auth': {'domain': 'CAUTH_CONF',
                                       'external_id': 'user1'}}
         authenticated = driver.authenticate(**auth_context)
@@ -185,6 +191,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                         'password': 'userpass'}
         with self.assertRaises(base.UnauthenticatedError):
             driver.authenticate(**auth_context)
+        os.unlink(test_key)
 
     def test_localdb_auth(self):
         """Test password authentication with ManageSF users only"""
@@ -322,10 +329,15 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
 
     def test_auth(self):
         """Test password authentication with every backend activated"""
+        test_key = tempfile.mkstemp()[1]
+        key_contents = 'AAAA... test@sf'
+        with open(test_key, 'w') as k:
+            k.write(key_contents)
         conf = {'auth': {'ldap': TEST_LDAP_AUTH,
                          'localdb': TEST_LOCALDB_AUTH,
                          'users': TEST_USERS_AUTH,
                          'keystone': TEST_KEYSTONE_AUTH, }, }
+        conf['auth']['users']['user1']['ssh_key_path'] = test_key
         driver = self._load_auth_plugin('Password', conf)
         # assert the driver has loaded every plugin
         self.assertEqual(4,
@@ -347,13 +359,14 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                 expected = {'login': 'user1',
                             'email': 'user@tests.dom',
                             'name': 'example user',
-                            'ssh_keys': [],
+                            'ssh_keys': [key_contents, ],
                             'external_auth': {'domain': 'CAUTH_CONF',
                                               'external_id': 'user1'}}
                 authenticated = driver.authenticate(**auth_context)
                 self.assertEqual(expected,
                                  authenticated,
-                                 "Got %r" % authenticated)
+                                 "Got %r, expected %r" % (authenticated,
+                                                          expected))
             # test authentication successful on ManageSF
             with patch('requests.get') as g:
                 auth_context = {'username': 'les',
@@ -376,6 +389,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                 self.assertEqual(expected,
                                  authenticated,
                                  "Got %r" % authenticated)
+            os.unlink(test_key)
 
 
 class TestGithubOrganizations(BaseTestAuthPlugin):
