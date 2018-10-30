@@ -68,6 +68,30 @@
       "revId": "6f1189e711de4d91960ecd2e36501d9866cdbf50",
       "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44344222_3bbc2ecb",
+        "filename": "cauth/service/repoxplorer.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-10-30T10:34:55Z",
+      "side": 1,
+      "message": "+1 as warning",
+      "parentUuid": "a3f19d76_98d15be7",
+      "range": {
+        "startLine": 60,
+        "startChar": 19,
+        "endLine": 60,
+        "endChar": 24
+      },
+      "revId": "6f1189e711de4d91960ecd2e36501d9866cdbf50",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
     }
   ]
 }
