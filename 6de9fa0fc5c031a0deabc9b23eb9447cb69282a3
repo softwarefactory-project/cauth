@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42bb9a4c_0587bc41",
+        "filename": "cauth/auth/dummies.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2018-10-30T10:38:00Z",
+      "side": 1,
+      "message": "Not convinced that shouldn\u0027t be in a test fixture directory, but nodepool does the same with the fake openstack provider, so... :)",
+      "revId": "6de9fa0fc5c031a0deabc9b23eb9447cb69282a3",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aeae5436_0a33127a",
+        "filename": "cauth/utils/userdetails.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2018-10-30T10:38:00Z",
+      "side": 1,
+      "message": "weird tabulation here",
+      "range": {
+        "startLine": 81,
+        "startChar": 25,
+        "endLine": 81,
+        "endChar": 28
+      },
+      "revId": "6de9fa0fc5c031a0deabc9b23eb9447cb69282a3",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
