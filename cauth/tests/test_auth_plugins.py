@@ -34,6 +34,12 @@ from cauth.tests.common import FakeResponse, githubmock_request
 from cauth.tests.common import openid_identity
 
 
+test_key = tempfile.mkstemp()[1]
+key_contents = 'AAAA... test@sf'
+with open(test_key, 'w') as k:
+    k.write(key_contents)
+
+
 SQL = {'url': 'sqlite:///%s' % tempfile.mkstemp()[1],
        'echo': False,
        'encoding': 'utf-8', }
@@ -78,6 +84,7 @@ TEST_USERS_AUTH = {
         "lastname": "example user",
         "mail": "user@tests.dom",
         "password": crypt.crypt("userpass", "$6$EFeaxATWohJ"),
+        "ssh_key": test_key,
     },
     "user2": {
         "lastname": "example user2",
@@ -160,7 +167,7 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
         expected = {'login': 'user1',
                     'email': 'user@tests.dom',
                     'name': 'example user',
-                    'ssh_keys': [],
+                    'ssh_keys': [key_contents, ],
                     'external_auth': {'domain': 'CAUTH_CONF',
                                       'external_id': 'user1'}}
         authenticated = driver.authenticate(**auth_context)
@@ -347,13 +354,14 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
                 expected = {'login': 'user1',
                             'email': 'user@tests.dom',
                             'name': 'example user',
-                            'ssh_keys': [],
+                            'ssh_keys': [key_contents, ],
                             'external_auth': {'domain': 'CAUTH_CONF',
                                               'external_id': 'user1'}}
                 authenticated = driver.authenticate(**auth_context)
                 self.assertEqual(expected,
                                  authenticated,
-                                 "Got %r" % authenticated)
+                                 "Got %r, expected %r" % (authenticated,
+                                                          expected))
             # test authentication successful on ManageSF
             with patch('requests.get') as g:
                 auth_context = {'username': 'les',
