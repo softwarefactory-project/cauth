@@ -57,10 +57,18 @@ class LocalUserAuthPlugin(BasePasswordAuthPlugin):
         if user:
             salted_password = user.get('password')
             if salted_password == crypt.crypt(password, salted_password):
+                keys = []
+                if user.get('ssh_key_path'):
+                    try:
+                        with open(user['ssh_key_path'], 'r') as key:
+                            keys.append(key.read())
+                    except IOError:
+                        m = 'Unable to set user key: file "%s" not found'
+                        logger.error(m % user.get('ssh_key_path'))
                 return {'login': username,
                         'email': user.get('mail'),
                         'name': user.get('lastname'),
-                        'ssh_keys': [],
+                        'ssh_keys': keys,
                         'external_auth': {'domain': self.get_domain(),
                                           'external_id': username}}
         err = '%s not found in local config file' % username

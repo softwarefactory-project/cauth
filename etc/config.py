@@ -69,6 +69,7 @@ auth = {
             "lastname": "example user",
             "mail": "user@tests.dom",
             "password": "password",
+            "ssh_key_path": "/path/to/key.pub",
         },
     },
     'openid': {
