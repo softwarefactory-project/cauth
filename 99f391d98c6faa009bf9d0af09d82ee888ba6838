@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13ef6a57_f1390a97",
+        "filename": "cauth/auth/password.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-11-19T16:37:38Z",
+      "side": 1,
+      "message": "The except is misplaced here. It won\u0027t work.",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 65
+      },
+      "revId": "99f391d98c6faa009bf9d0af09d82ee888ba6838",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06ca11d7_bca15a01",
+        "filename": "cauth/tests/test_auth_plugins.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-11-19T16:37:38Z",
+      "side": 1,
+      "message": "I prefer to put that in a setUp and tearDown if possible to avoid fill the tmpdir.",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 25
+      },
+      "revId": "99f391d98c6faa009bf9d0af09d82ee888ba6838",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a45fd10_8bc534f4",
+        "filename": "etc/config.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-11-19T16:37:38Z",
+      "side": 1,
+      "message": "If you expect a path better to name it ssh_key_path.",
+      "range": {
+        "startLine": 72,
+        "startChar": 13,
+        "endLine": 72,
+        "endChar": 20
+      },
+      "revId": "99f391d98c6faa009bf9d0af09d82ee888ba6838",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
