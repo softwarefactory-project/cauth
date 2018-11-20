@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ddac408_85ab6399",
+        "filename": "cauth/auth/password.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2018-11-20T12:56:55Z",
+      "side": 1,
+      "message": "ssh_key_path",
+      "revId": "f902a107d33926e93a7125da50a77ff17a913a31",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
