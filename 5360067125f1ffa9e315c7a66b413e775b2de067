@@ -1,0 +1,416 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c108af6_b48769c5",
+        "filename": "cauth/auth/apikey.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "This is not used.",
+      "range": {
+        "startLine": 85,
+        "startChar": 0,
+        "endLine": 86,
+        "endChar": 42
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "295c1a5f_d0e60c6e",
+        "filename": "cauth/auth/github.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "self.terror(e.message, transactionID)",
+      "range": {
+        "startLine": 108,
+        "startChar": 12,
+        "endLine": 108,
+        "endChar": 55
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02da4e58_f7c8adb1",
+        "filename": "cauth/auth/github.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "Maybe add a terror here too ?",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 71
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "299c9bcd_72f619c6",
+        "filename": "cauth/auth/github.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "Is it needed as in controllers/github.py we already log the success ?",
+      "range": {
+        "startLine": 117,
+        "startChar": 0,
+        "endLine": 118,
+        "endChar": 79
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8d4691d_b513325e",
+        "filename": "cauth/auth/github.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "Better to use resp.text here to avoid: \u0027\u003cResponse [401]\u003e\u0027, same below.",
+      "range": {
+        "startLine": 164,
+        "startChar": 39,
+        "endLine": 164,
+        "endChar": 44
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64198237_3dc9d68b",
+        "filename": "cauth/auth/github.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "Seems that this message will be added to the authentication cauth page notification. Then what about adding the transaction ID. Then it will be convenient for a user to give the id to the admin ...",
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1196b28_7888adf1",
+        "filename": "cauth/auth/github.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "Same is it need to log it here as well ?",
+      "range": {
+        "startLine": 204,
+        "startChar": 0,
+        "endLine": 205,
+        "endChar": 47
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1dead1c9_50799eeb",
+        "filename": "cauth/auth/github.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "For others auth plugin like bitbucket and google the ID is not returned in the struct. Why ?",
+      "range": {
+        "startLine": 213,
+        "startChar": 17,
+        "endLine": 213,
+        "endChar": 47
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac6e028f_feeb9c1b",
+        "filename": "cauth/auth/httpd.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "Better to keep that message consistent with the other plugin. Or maybe remove it as this message will be log twice (controllers/base.py).",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 43
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6ffcead_c8aeba78",
+        "filename": "cauth/auth/openid.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "It does not seems to be an error here.",
+      "range": {
+        "startLine": 108,
+        "startChar": 12,
+        "endLine": 108,
+        "endChar": 23
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "517a525c_4f6ee76e",
+        "filename": "cauth/auth/openid_connect.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "a tdebug telling we request a token might be nice.",
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b0048ce_15ba52cb",
+        "filename": "cauth/auth/password.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "tinfo auth succedeed",
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1031cc0c_51d807a6",
+        "filename": "cauth/auth/password.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "tinfo auth succeeded",
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f058fb5_3c4db8df",
+        "filename": "cauth/auth/password.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "same reports a log that auth suceedeed.",
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf2bcec4_2f70da83",
+        "filename": "cauth/auth/password.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "Should it be reported in the log ?",
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a03af45_d7549537",
+        "filename": "cauth/auth/password.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "self.terror ?",
+      "range": {
+        "startLine": 264,
+        "startChar": 8,
+        "endLine": 264,
+        "endChar": 18
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "986738ef_2a1fe1be",
+        "filename": "cauth/controllers/github.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "%s (%s)",
+      "range": {
+        "startLine": 57,
+        "startChar": 20,
+        "endLine": 57,
+        "endChar": 24
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7052c22f_a58855d1",
+        "filename": "cauth/controllers/oauth2.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "Kepp it consistent with the email in the message.",
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "622f6aad_bdb3e556",
+        "filename": "cauth/controllers/root.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "Could it be wrapped ?",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 12
+      },
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e205cc1e_f81ef695",
+        "filename": "cauth/service/repoxplorer.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-15T11:02:27Z",
+      "side": 1,
+      "message": "Could it be covered by the transaction log as well ?",
+      "revId": "5360067125f1ffa9e315c7a66b413e775b2de067",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
