@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0b30b9a6_cf719f81",
+        "filename": "cauth/auth/apikey.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 68
+      },
+      "writtenOn": "2019-01-21T10:25:11Z",
+      "side": 1,
+      "message": "transactionID",
+      "revId": "24dcde70b1a79785265b3250ea2b677887eb64e1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a8f3a718_c0857f42",
         "filename": "cauth/auth/github.py",
         "patchSetId": 8
@@ -78,6 +95,69 @@
       "side": 1,
       "message": "Done",
       "parentUuid": "da1a15a4_7efbc664",
+      "revId": "24dcde70b1a79785265b3250ea2b677887eb64e1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9f0c65c_28ea829a",
+        "filename": "cauth/auth/openid_connect.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 68
+      },
+      "writtenOn": "2019-01-21T10:25:11Z",
+      "side": 1,
+      "message": "transactionID",
+      "revId": "24dcde70b1a79785265b3250ea2b677887eb64e1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f12e857_2592d625",
+        "filename": "cauth/utils/transaction.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 68
+      },
+      "writtenOn": "2019-01-21T10:25:11Z",
+      "side": 1,
+      "message": "NIT: I\u0027d find it more readable if it was tXXX(transactionID, message, *args) but I\u0027ll live with it :)",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 44
+      },
+      "revId": "24dcde70b1a79785265b3250ea2b677887eb64e1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50b64fe9_058ee216",
+        "filename": "cauth/utils/userdetails.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 68
+      },
+      "writtenOn": "2019-01-21T10:25:11Z",
+      "side": 1,
+      "message": "login",
+      "range": {
+        "startLine": 73,
+        "startChar": 32,
+        "endLine": 73,
+        "endChar": 36
+      },
       "revId": "24dcde70b1a79785265b3250ea2b677887eb64e1",
       "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
       "unresolved": false
