@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8f3a718_c0857f42",
+        "filename": "cauth/auth/github.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-21T09:10:45Z",
+      "side": 1,
+      "message": "I don\u0027t think you have the same behavior than before the previous PS. Also I don\u0027t think you should raise here because a fail to fetch the ssh keys should not prevent authentication.",
+      "range": {
+        "startLine": 106,
+        "startChar": 16,
+        "endLine": 106,
+        "endChar": 78
+      },
+      "revId": "24dcde70b1a79785265b3250ea2b677887eb64e1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da1a15a4_7efbc664",
+        "filename": "cauth/auth/httpd.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 6
+      },
+      "writtenOn": "2019-01-21T09:10:45Z",
+      "side": 1,
+      "message": "transactionID to be added ?",
+      "revId": "24dcde70b1a79785265b3250ea2b677887eb64e1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
