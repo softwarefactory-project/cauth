@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6d502274_41329b8e",
+        "filename": "cauth/auth/apikey.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2019-01-21T22:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0b30b9a6_cf719f81",
+      "revId": "24dcde70b1a79785265b3250ea2b677887eb64e1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a8f3a718_c0857f42",
         "filename": "cauth/auth/github.py",
         "patchSetId": 8
@@ -118,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "3259cd21_e540572c",
+        "filename": "cauth/auth/openid_connect.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2019-01-21T22:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9f0c65c_28ea829a",
+      "revId": "24dcde70b1a79785265b3250ea2b677887eb64e1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f12e857_2592d625",
         "filename": "cauth/utils/transaction.py",
         "patchSetId": 8
@@ -152,6 +188,30 @@
       "writtenOn": "2019-01-21T10:25:11Z",
       "side": 1,
       "message": "login",
+      "range": {
+        "startLine": 73,
+        "startChar": 32,
+        "endLine": 73,
+        "endChar": 36
+      },
+      "revId": "24dcde70b1a79785265b3250ea2b677887eb64e1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33dbd938_b717e0e2",
+        "filename": "cauth/utils/userdetails.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2019-01-21T22:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50b64fe9_058ee216",
       "range": {
         "startLine": 73,
         "startChar": 32,
