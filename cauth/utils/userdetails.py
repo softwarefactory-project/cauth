@@ -91,6 +91,6 @@ class UserDetailsCreator(transaction.TransactionLogger):
             try:
                 service.register_new_user(user)
             except base.UserRegistrationError as e:
-                self.texception('Error when adding user %s (ID %s)',
-                                transactionID, user['login'], c_id)
+                self.texception('Error when adding user %s (ID %s): %s',
+                                transactionID, user['login'], c_id, e)
         return c_id

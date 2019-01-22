@@ -15,7 +15,10 @@
 # under the License.
 
 import logging
-from urllib import unquote
+try:
+    from urllib import unquote
+except ImportError:
+    from urllib.parse import unquote
 
 from stevedore import driver
 from pecan import expose, response, abort, request, conf

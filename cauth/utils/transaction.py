@@ -16,11 +16,17 @@
 
 import hashlib
 import uuid
+import sys
+
+PY3 = sys.version_info[0] == 3
 
 
 def make_tid():
     """Return a new random string"""
-    return hashlib.md5(str(uuid.uuid4())).hexdigest()[:8]
+    uid = str(uuid.uuid4())
+    if PY3:
+        uid = uid.encode('ascii')
+    return hashlib.md5(uid).hexdigest()[:8]
 
 
 def ensure_tid(auth_context):

@@ -19,7 +19,10 @@ import crypt
 import ldap
 import logging
 import requests
-import urllib
+try:
+    from urllib import basejoin
+except ImportError:
+    from urllib.parse import urljoin as basejoin
 
 from basicauth import encode
 try:
@@ -141,7 +144,7 @@ class ManageSFAuthPlugin(BasePasswordAuthPlugin):
         transactionID = transaction.ensure_tid(auth_context)
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
-        bind_url = urllib.basejoin(self.conf['managesf_url'], '/bind')
+        bind_url = basejoin(self.conf['managesf_url'], '/bind')
         headers = {"Authorization": encode(username.encode('utf8'),
                                            password.encode('utf8'))}
         self.tdebug("Binding to managesf", transactionID)
@@ -258,7 +261,7 @@ class PasswordAuthPlugin(BasePasswordAuthPlugin):
             try:
                 user = plugin.authenticate(**auth_context)
             except base.UnauthenticatedError as e:
-                errors.append("[%s: %s]" % (plugin.name, e.message))
+                errors.append("[%s: %s]" % (plugin.name, str(e)))
         if user:
             user['transactionID'] = transactionID
             return user
