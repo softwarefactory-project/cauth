@@ -1,0 +1,6 @@
+- project:
+    check:
+      jobs:
+        - tox-py36:
+            nodeset: fedora-latest-runc
+            voting: false

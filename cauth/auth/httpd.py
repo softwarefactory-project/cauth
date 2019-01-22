@@ -15,7 +15,10 @@
 # under the License.
 
 import logging
-from urlparse import urlparse
+try:
+    from urlparse import urlparse
+except ImportError:
+    from urllib.parse import urlparse
 
 from pecan import request
 from pecan.core import redirect

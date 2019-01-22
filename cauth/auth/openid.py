@@ -18,7 +18,10 @@
 import logging
 import requests
 from pecan import request
-import urllib
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
 
 from cauth.auth import base
 from cauth.utils import transaction
@@ -52,7 +55,7 @@ class OpenIDAuthPlugin(base.AuthProtocolPlugin):
         params = {'back': back}
         response.status_code = 302
         return_to = request.host_url + self.conf['redirect_uri']
-        return_to += "?" + urllib.urlencode(params)
+        return_to += "?" + urlencode(params)
         openid_params = {
             "openid.ns": "http://specs.openid.net/auth/2.0",
             "openid.mode": "checkid_setup",
@@ -82,7 +85,7 @@ class OpenIDAuthPlugin(base.AuthProtocolPlugin):
         self.tdebug("Redirecting user to %s",
                     transactionID, self.conf['auth_url'])
         response.location = self.conf['auth_url'] + "?" + \
-            urllib.urlencode(openid_params)
+            urlencode(openid_params)
 
     def verify_data(self, auth_context):
         transactionID = transaction.ensure_tid(auth_context)
