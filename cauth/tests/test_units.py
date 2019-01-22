@@ -13,6 +13,7 @@
 # under the License.
 
 import string
+import sys
 
 from unittest import TestCase
 from mock import patch
@@ -33,8 +34,15 @@ import os
 import pkg_resources
 
 import httmock
-import urlparse
-import urllib2
+try:
+    from urllib2 import unquote
+    from urlparse import urlparse, parse_qs
+except ImportError:
+    from urllib.parse import unquote
+    from urllib.parse import urlparse, parse_qs
+
+
+PY3 = sys.version_info[0] == 3
 
 
 def raise_(ex):
@@ -48,7 +56,18 @@ def gen_rsa_key():
         memory = BIO.MemoryBuffer()
         key.save_key_bio(memory, cipher=None)
         p_key = memory.getvalue()
-        file(conf.app['priv_key_path'], 'w').write(p_key)
+        open(conf.app['priv_key_path'], 'w').write(p_key)
+
+
+def mock_request(*args, **kwargs):
+    class MockResponse:
+        def __init__(self, status_code):
+            self.status_code = status_code
+            self.json_data = {}
+
+        def json(self):
+            return self.json_data
+    return MockResponse(400)
 
 
 def gen_groups_config(groups_config=None):
@@ -170,9 +189,9 @@ class TestLocalGroups(TestCase):
         cookie = auth_tkt.split('=')[-1]
         try:
             cookie_dict = dict(x.split('=', 1)
-                               for x in urllib2.unquote(cookie).split(';'))
+                               for x in unquote(cookie).split(';'))
         except Exception:
-            raise Exception(urllib2.unquote(cookie).split(';'))
+            raise Exception(unquote(cookie).split(';'))
         self.assertTrue('groups' in cookie_dict, cookie_dict)
         groups = cookie_dict['groups'][1:-1].split('::')
         self.assertTrue('group1' in groups, cookie_dict)
@@ -181,8 +200,11 @@ class TestLocalGroups(TestCase):
 class TestCauthApp(FunctionalTest):
     def test_get_login(self):
         response = self.app.get('/login', params={'back': 'r/'})
-        self.assertGreater(response.body.find('value="r/"'), 0)
-        self.assertGreater(response.body.find('Login via Github'), 0)
+        body = response.body
+        if PY3:
+            body = body.decode('utf-8')
+        self.assertGreater(body.find('value="r/"'), 0)
+        self.assertGreater(body.find('Login via Github'), 0)
         self.assertEqual(response.status_int, 200)
 
     def test_post_login(self):
@@ -190,7 +212,7 @@ class TestCauthApp(FunctionalTest):
         # if the domain is tests.dom
         reg = 'cauth.service.managesf.ManageSFServicePlugin.register_new_user'
         with patch(reg):
-            with patch('requests.get'):
+            with patch('requests.get', side_effect=mock_request):
                 response = self.app.post('/login',
                                          params={'username': 'user1',
                                                  'password': 'userpass',
@@ -224,7 +246,7 @@ class TestCauthApp(FunctionalTest):
                    'args': {'username': 'user1',
                             'password': 'userpass'}, }
         reg = 'cauth.service.managesf.ManageSFServicePlugin.register_new_user'
-        with patch(reg), patch('requests.get'):
+        with patch(reg), patch('requests.get', side_effect=mock_request):
             response = self.app.post_json('/login',
                                           payload)
         self.assertEqual(response.status_int, 303)
@@ -257,7 +279,7 @@ class TestCauthApp(FunctionalTest):
                    'args': {'username': 'user_collide',
                             'password': 'userpass'}, }
         gcau = 'cauth.model.db.get_or_create_authenticated_user'
-        with patch(gcau) as g, patch('requests.get'):
+        with patch(gcau) as g, patch('requests.get', side_effect=mock_request):
             g.side_effect = exceptions.UsernameConflictException(
                 message="",
                 external_auth_details={'domain': 'SOME_DOMAIN',
@@ -291,8 +313,8 @@ class TestCauthApp(FunctionalTest):
                                                 'back': 'r/',
                                                 'password': 'userpass'})
                 self.assertEqual(response.status_int, 302)
-                parsed = urlparse.urlparse(response.headers['Location'])
-                parsed_qs = urlparse.parse_qs(parsed.query)
+                parsed = urlparse(response.headers['Location'])
+                parsed_qs = parse_qs(parsed.query)
                 self.assertEqual('https', parsed.scheme)
                 self.assertEqual('github.com', parsed.netloc)
                 self.assertEqual('/login/oauth/authorize', parsed.path)
@@ -312,8 +334,8 @@ class TestCauthApp(FunctionalTest):
                 response = self.app.post_json('/login',
                                               payload)
                 self.assertEqual(response.status_int, 302)
-                parsed = urlparse.urlparse(response.headers['Location'])
-                parsed_qs = urlparse.parse_qs(parsed.query)
+                parsed = urlparse(response.headers['Location'])
+                parsed_qs = parse_qs(parsed.query)
                 self.assertEqual('https', parsed.scheme)
                 self.assertEqual('github.com', parsed.netloc)
                 self.assertEqual('/login/oauth/authorize', parsed.path)
@@ -340,9 +362,12 @@ class TestCauthApp(FunctionalTest):
     def test_get_logout(self):
         # Ensure client SSO cookie content is deleted
         response = self.app.get('/logout')
+        body = response.body
+        if PY3:
+            body = body.decode('utf-8')
         self.assertEqual(response.status_int, 200)
         self.assertTrue('auth_pubtkt=;' in response.headers['Set-Cookie'])
-        self.assertGreater(response.body.find(common.LOGOUT_MSG), 0)
+        self.assertGreater(body.find(common.LOGOUT_MSG), 0)
 
     def test_introspection(self):
         response = self.app.get('/about/').json
@@ -364,6 +389,8 @@ class TestCauthApp(FunctionalTest):
         to_patch = 'cauth.utils.userdetails.UserDetailsCreator.create_user'
         with patch(to_patch) as cu:
             cu.return_value = 42
+            # This doesn't work :(
+            # with patch('requests.get', side_effect=mock_request):
             with patch('requests.get'):
                 # Not authenticated
                 key_get = self.app.get('/apikey', status="*")
@@ -446,6 +473,8 @@ class TestCauthApp(FunctionalTest):
         to_patch = 'cauth.utils.userdetails.UserDetailsCreator.create_user'
         with patch(to_patch) as cu:
             cu.return_value = 123
+            # This doesn't work :(
+            # with patch('requests.get', side_effect=mock_request):
             with patch('requests.get'):
                 response = self.app.post_json('/login',
                                               payload)
@@ -592,7 +621,7 @@ class TestCollisionStrategies(TestCase):
             self.assertEqual(response.status_int, 303, response)
             auth_tkt = response.headers['Set-Cookie'].split(';')[0]
             cookie = auth_tkt.split('=')[-1]
-            cookie_fields = urllib2.unquote(cookie).split(';')
+            cookie_fields = unquote(cookie).split(';')
             cookie = dict(x.split('=', 1) for x in cookie_fields)
             diff = differentiate(
                 dummies.EvilSpockAuth.spock['login'],
