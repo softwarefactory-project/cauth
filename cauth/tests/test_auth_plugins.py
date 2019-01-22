@@ -19,8 +19,23 @@ import crypt
 import json
 import ldap
 import tempfile
-from contextlib import nested
 from unittest import TestCase
+
+# Py2/Py3 support
+try:
+    from contextlib import nested  # Python 2
+except ImportError:
+    from contextlib import ExitStack, contextmanager
+
+    @contextmanager
+    def nested(*contexts):
+        """
+        Reimplementation of nested in python 3.
+        """
+        with ExitStack() as stack:
+            for ctx in contexts:
+                stack.enter_context(ctx)
+            yield contexts
 
 import keystoneclient.exceptions as k_exc
 import httmock
