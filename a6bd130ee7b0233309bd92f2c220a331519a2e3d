@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94cfa40d_d394ded7",
+        "filename": "cauth/controllers/base.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 68
+      },
+      "writtenOn": "2019-01-22T09:46:13Z",
+      "side": 1,
+      "message": "\u0027Authentication failed. (Transaction ID: %s)\u0027 % auth_context[\u0027transactionID\u0027]",
+      "range": {
+        "startLine": 83,
+        "startChar": 48,
+        "endLine": 83,
+        "endChar": 72
+      },
+      "revId": "a6bd130ee7b0233309bd92f2c220a331519a2e3d",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
