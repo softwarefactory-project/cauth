@@ -19,8 +19,23 @@ import crypt
 import json
 import ldap
 import tempfile
-from contextlib import nested
 from unittest import TestCase
+
+# Py2/Py3 support
+try:
+    from contextlib import nested  # Python 2
+except ImportError:
+    from contextlib import ExitStack, contextmanager
+
+    @contextmanager
+    def nested(*contexts):
+        """
+        Reimplementation of nested in python 3.
+        """
+        with ExitStack() as stack:
+            for ctx in contexts:
+                stack.enter_context(ctx)
+            yield contexts
 
 import keystoneclient.exceptions as k_exc
 import httmock
@@ -537,16 +552,17 @@ class TestOpenIDConnectAuthPlugin(BaseTestAuthPlugin):
         response = MagicMock()
         auth_context = {'back': '/',
                         'response': response}
-        patches = [
-            patch('requests.request'),
-            patch('cauth.model.db.put_url'),
-        ]
-        with nested(*patches) as (r, c):
-            r.return_value = FakeResponse(200,
-                                          content=json.dumps(
-                                              OPENID_CONNECT_PROVIDER_CONFIG),
-                                          is_json=True)
-            r.return_value.text = json.dumps(OPENID_CONNECT_PROVIDER_CONFIG)
+        with patch('cauth.model.db.put_url'), patch('requests.request') as r:
+            rv = MagicMock()
+            rv.status_code = 200
+            rv.text = json.dumps(OPENID_CONNECT_PROVIDER_CONFIG)
+            rv.json.return_value = OPENID_CONNECT_PROVIDER_CONFIG
+            r.return_value = rv
+            # hr.return_value = FakeResponse(200,
+            #                                content=json.dumps(
+            #                                    OPENID_CONNECT_PROVIDER_CONFIG),
+            #                                is_json=True)
+            # hr.return_value.text = json.dumps(OPENID_CONNECT_PROVIDER_CONFIG)
             self.driver.authenticate(**auth_context)
             self.assertIn(u'https://openid.com/o/oauth2/v2/auth?',
                           response.location)
@@ -584,17 +600,14 @@ class TestOpenIDConnectAuthPlugin(BaseTestAuthPlugin):
                                     'name': 'family_name',
                                     'uid': 'picture',
                                     'ssh_keys': None}
-        patches = [
-            patch.object(C, 'do_access_token_request'),
-        ]
-        with nested(*patches) as (datr, ):
 
-            class fake:
-                def __init__(self, d):
-                    self.d = d
+        with patch.object(C, 'do_access_token_request') as datr:
 
-                def to_dict(self):
-                    return self.d
+            def fake(d):
+                m = MagicMock()
+                m.d = d
+                m.to_dict.return_value = d
+                return m
 
             datr.return_value = fake(OPENID_CONNECT_TOKEN)
             auth = self.driver._authenticate("dumb", "42", qs, "FAKE-TID")

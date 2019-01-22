@@ -18,7 +18,10 @@
 import logging
 import requests
 import time
-import urllib
+try:
+    from urllib import quote_plus, urljoin
+except ImportError:
+    from urllib.parse import quote_plus, urljoin
 
 from cauth.auth import base
 from cauth.utils import common
@@ -58,7 +61,7 @@ class APIKeyAuthPlugin(base.AuthProtocolPlugin):
             self.tdebug("API key not found", transactionID)
             raise base.UnauthenticatedError('API key not found')
         # fetch the user info from manageSF
-        url = urllib.basejoin(
+        url = urljoin(
                 self.conf['url'], "/services_users/?cauth_id=%s" % cauth_id)
         headers = {"Content-type": "application/json",
                    "X-Remote-User": "admin"}
@@ -66,7 +69,7 @@ class APIKeyAuthPlugin(base.AuthProtocolPlugin):
         validity = time.time() + 10
         ticket = common.create_ticket(uid='admin',
                                       validuntil=validity)
-        cookie = {'auth_pubtkt': urllib.quote_plus(ticket)}
+        cookie = {'auth_pubtkt': quote_plus(ticket)}
         self.tdebug("Retrieving user info from %s for cauth_id %s ...",
                     transactionID, self.conf['url'], cauth_id)
         resp = requests.get(url, headers=headers,

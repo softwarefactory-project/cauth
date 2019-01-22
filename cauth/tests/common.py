@@ -19,7 +19,10 @@ import os
 import tempfile
 
 import httmock
-import urlparse
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
 
 
 class FakeResponse():
@@ -107,12 +110,13 @@ def githubmock_request(url, request):
         for user in users:
             auth_header = request.headers['Authorization']
             _token = users[user]['token']
+            btoken = (_token + ':x-oauth-basic').encode()
             # handle oauth
             if _token in auth_header:
                 u = user
                 break
             # handle API key auth
-            elif base64.b64encode(_token + ':x-oauth-basic') in auth_header:
+            elif base64.b64encode(btoken) in bytes(auth_header, 'utf8'):
                 u = user
                 break
         if not u:

@@ -15,7 +15,11 @@
 
 import json
 import logging
-import urllib
+
+try:
+    from urllib import quote_plus
+except ImportError:
+    from urllib.parse import quote_plus
 
 import requests
 
@@ -53,7 +57,7 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
             "Content-type": "application/json",
             "Admin-Token": self.conf["admin_token"]}
         url = "%s/api/v1/users/%s" % (
-            self.conf["url"], urllib.quote_plus(user["login"]))
+            self.conf["url"], quote_plus(user["login"]))
 
         # Check user already exists in the DB
         try:
@@ -61,7 +65,7 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
         except Exception as exc:
             self.twarning(
                 "Skip user %s registration, repoxplorer backend down (%s)",
-                transactionID, urllib.quote_plus(user["login"]), exc)
+                transactionID, quote_plus(user["login"]), exc)
             return
 
         if resp.status_code == 404:
@@ -89,7 +93,7 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
         else:
             self.twarning(
                 "Skip user %s registration, unexpected status code (%s)",
-                transactionID, urllib.quote_plus(user["login"]),
+                transactionID, quote_plus(user["login"]),
                 resp.status_code)
             return
 
@@ -101,7 +105,7 @@ class RepoxplorerServicePlugin(base.BaseServicePlugin):
         except Exception as exc:
             self.twarning(
                 "Skip user %s registration, repoxplorer backend down (%s)",
-                transactionID, urllib.quote_plus(user["login"]), exc)
+                transactionID, quote_plus(user["login"]), exc)
             return
 
         self.tdebug('repoxplorer responded with code: %s',

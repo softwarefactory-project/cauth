@@ -15,7 +15,22 @@
 import json
 from unittest import TestCase
 
-from contextlib import nested
+# Py2/Py3 support
+try:
+    from contextlib import nested  # Python 2
+except ImportError:
+    from contextlib import ExitStack, contextmanager
+
+    @contextmanager
+    def nested(*contexts):
+        """
+        Reimplementation of nested in python 3.
+        """
+        with ExitStack() as stack:
+            for ctx in contexts:
+                stack.enter_context(ctx)
+            yield contexts
+
 from mock import patch, Mock
 from stevedore import driver
 
@@ -128,8 +143,7 @@ class TestGerritPlugin(TestCase):
             name='managesf',
             invoke_on_load=True,
             invoke_args=(self.conf,)).driver
-        patches = [patch('cauth.service.managesf.requests.post')]
-        with nested(*patches) as (post, ):
+        with patch('cauth.service.managesf.requests.post') as post:
             msf.register_new_user({'login': 'john',
                                    'email': 'john@tests.dom',
                                    'name': 'John Doe',
@@ -153,57 +167,56 @@ class TestGerritPlugin(TestCase):
             invoke_on_load=True,
             invoke_args=(self.conf,)).driver
 
-        patches = [patch('cauth.service.managesf.requests.get'),
-                   patch('cauth.service.managesf.requests.put'),
-                   patch('cauth.service.managesf.requests.post'), ]
-        with nested(*patches) as (get, put, post):
-            get.side_effect = lambda *args, **kwargs: FakeResponse(404)
-            msf.register_new_user({'login': 'john',
-                                   'email': 'john@tests.dom',
-                                   'emails': ['john@tests.dom'],
-                                   'name': 'John Doe',
-                                   'ssh_keys': [],
-                                   'external_id': 42})
-            self.assertTrue(put.called)
-            self.assertFalse(post.called)
+        with patch('cauth.service.managesf.requests.get') as get:
+            with patch('cauth.service.managesf.requests.put') as put:
+                with patch('cauth.service.managesf.requests.post') as post:
+                    get.side_effect = lambda *args, **kwargs: FakeResponse(404)
+                    msf.register_new_user({'login': 'john',
+                                           'email': 'john@tests.dom',
+                                           'emails': ['john@tests.dom'],
+                                           'name': 'John Doe',
+                                           'ssh_keys': [],
+                                           'external_id': 42})
+                    self.assertTrue(put.called)
+                    self.assertFalse(post.called)
 
-            put.reset_mock()
-            post.reset_mock()
+                    put.reset_mock()
+                    post.reset_mock()
 
-            puser = {
-                'uid': 'saboten',
-                'name': 'Cactus Saboten',
-                'default-email': 'saboten@domain1',
-                'emails': [
-                    {'email': 'saboten@domain1',
-                     'groups': [
-                        {'group': 'ugroup',
-                         'start-date': '2016-01-01',
-                         'end-date': '2016-01-09'}
-                         ]
-                     }
-                ]
-            }
-            get.side_effect = lambda *args, **kwargs: FakeResponse(
-                200, json.dumps(puser), True)
-            msf.register_new_user({'login': 'john',
-                                   'email': 'john@tests.dom',
-                                   'emails': ['john@tests.dom'],
-                                   'name': 'John Doe',
-                                   'ssh_keys': [],
-                                   'external_id': 42})
-            self.assertFalse(put.called)
-            self.assertTrue(post.called)
+                    puser = {
+                        'uid': 'saboten',
+                        'name': 'Cactus Saboten',
+                        'default-email': 'saboten@domain1',
+                        'emails': [
+                            {'email': 'saboten@domain1',
+                             'groups': [
+                                {'group': 'ugroup',
+                                 'start-date': '2016-01-01',
+                                 'end-date': '2016-01-09'}
+                                 ]
+                             }
+                        ]
+                    }
+                    get.side_effect = lambda *args, **kwargs: FakeResponse(
+                        200, json.dumps(puser), True)
+                    msf.register_new_user({'login': 'john',
+                                           'email': 'john@tests.dom',
+                                           'emails': ['john@tests.dom'],
+                                           'name': 'John Doe',
+                                           'ssh_keys': [],
+                                           'external_id': 42})
+                    self.assertFalse(put.called)
+                    self.assertTrue(post.called)
 
-            put.reset_mock()
-            post.reset_mock()
+                    put.reset_mock()
+                    post.reset_mock()
 
-            get.side_effect = Exception('fake')
-            msf.register_new_user({'login': 'john',
-                                   'email': 'john@tests.dom',
-                                   'emails': ['john@tests.dom'],
-                                   'name': 'John Doe',
-                                   'ssh_keys': [],
-                                   'external_id': 42})
-            self.assertFalse(put.called)
-            self.assertFalse(post.called)
+                    get.side_effect = Exception('fake')
+                    msf.register_new_user({'login': 'john',
+                                           'email': 'john@tests.dom',
+                                           'emails': ['john@tests.dom'],
+                                           'name': 'John Doe',
+                                           'ssh_keys': [],
+                                           'external_id': 42})
+                    self.assertFalse(put.called)
+                    self.assertFalse(post.called)

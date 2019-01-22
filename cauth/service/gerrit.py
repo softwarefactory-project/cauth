@@ -22,6 +22,9 @@ import requests
 
 from cauth.service import base
 
+import sys
+if sys.version_info[0] >= 3:
+    unicode = str
 
 logger = logging.getLogger(__name__)
 
