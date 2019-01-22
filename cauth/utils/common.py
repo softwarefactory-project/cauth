@@ -17,19 +17,27 @@
 import base64
 import hashlib
 import time
-import urllib
+import sys
+
+try:
+    from urllib import quote_plus, unquote_plus
+except ImportError:
+    from urllib.parse import quote_plus, unquote_plus
 
 from M2Crypto import RSA
 from pecan import response, conf, render
 from cauth.utils import userdetails, exceptions
 
 
+PY3 = sys.version_info[0] == 3
 LOGOUT_MSG = "You have been successfully logged " \
              "out of all the Software factory services."
 
 
 def signature(data):
     rsa_priv = RSA.load_key(conf.app['priv_key_path'])
+    if PY3:
+        data = data.encode('utf-8')
     dgst = hashlib.sha1(data).digest()
     sig = rsa_priv.sign(dgst, 'sha1')
     sig = base64.b64encode(sig)
@@ -78,10 +86,13 @@ def setup_response(user, back):
                            cid=c_id,
                            validuntil=(
                                time.time() + conf.app['cookie_period']))
-    enc_ticket = urllib.quote_plus(ticket)
+    enc_ticket = quote_plus(ticket)
     response.set_cookie('auth_pubtkt',
                         value=enc_ticket,
                         max_age=conf.app['cookie_period'],
                         overwrite=True)
     response.status_code = 303
-    response.location = urllib.unquote_plus(back).decode("utf8")
+    loc = unquote_plus(back)
+    if not PY3:
+        loc = loc.decode("utf8")
+    response.location = loc
