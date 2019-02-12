@@ -74,7 +74,6 @@ class OAuth2Controller(transaction.TransactionLogger):
                         transactionID, provider)
             auth_context['back'] = back
             valid_user = auth_plugin.authenticate(**auth_context)
-            raise base.UnauthenticatedError("Failure to authenticate")
         except base.UnauthenticatedError as e:
             response.status = 401
             auth_methods = [k for k, v in conf.get('auth', {})]
