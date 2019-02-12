@@ -39,7 +39,7 @@ def signature(data):
 def create_ticket(**kwargs):
     ticket = ''
     for k in sorted(kwargs.keys()):
-        if ticket is not '':
+        if ticket != '':
             ticket = ticket + ';'
         ticket = ticket + '%s=%s' % (k, kwargs[k])
 
