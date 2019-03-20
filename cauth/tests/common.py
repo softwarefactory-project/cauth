@@ -172,6 +172,11 @@ class dummy_conf():
                        "mail": "user1@tests.dom",
                        "password": crypt.crypt("userpass",
                                                "$6$EFeaxATWohJ")},
+                      "user2":
+                      {"lastname": "Demo user2",
+                       "mail": "user2@tests.dom",
+                       "password": crypt.crypt("userpass",
+                                               "$6$EFeaxATWohJ")},
                       "user_collide":
                       {"lastname": "user collision",
                        "mail": "user_collide@tests.dom",
@@ -208,6 +213,10 @@ class dummy_conf():
                                 'format': (
                                     '%(asctime)s %(levelname)-5.5s [%(name)s]'
                                     '[%(threadName)s] %(message)s')}}}
+        self.groups = {'local_groups': {
+                           'config_file': '/tmp/test_groups.yaml',
+                           'lookup_key': 'email',
+        }}
 
     def __getitem__(self, key):
         return getattr(self, key, None)
