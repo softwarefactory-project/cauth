@@ -17,6 +17,7 @@ import string
 from unittest import TestCase
 from mock import patch
 from M2Crypto import RSA, BIO
+import yaml
 
 from webtest import TestApp
 from pecan import load_app
@@ -47,6 +48,16 @@ def gen_rsa_key():
         key.save_key_bio(memory, cipher=None)
         p_key = memory.getvalue()
         file(conf.app['priv_key_path'], 'w').write(p_key)
+
+
+def gen_groups_config(groups_config=None):
+    conf = dummy_conf()
+    if groups_config is None:
+        groups_config = {'groups': {}}
+    if os.path.isfile(conf.groups['local_groups']['config_file']):
+        os.unlink(conf.groups['local_groups']['config_file'])
+    with file(conf.groups['local_groups']['config_file'], 'w') as f:
+        yaml.dump(groups_config, f)
 
 
 class FunctionalTest(TestCase):
@@ -94,6 +105,72 @@ class TestUtils(TestCase):
             sign.return_value = '123'
             self.assertEqual('a=arg1;b=arg2;sig=123',
                              common.create_ticket(a='arg1', b='arg2'))
+
+
+class TestLocalGroups(TestCase):
+    def app_setup(self):
+        c = dummy_conf()
+        gen_rsa_key()
+        cfg = {'managesf': c.managesf,
+               'app': c.app,
+               'auth': c.auth,
+               'services': c.services,
+               'sqlalchemy': c.sqlalchemy,
+               'groups': c.groups}
+        return cfg
+
+    def test_local_groups(self):
+        gen_groups_config(
+            groups_config={'group1': {'description': 'group1',
+                                      'members': ['user1@tests.dom',
+                                                  'user2@tests.dom']},
+                           'group2': {'description': 'group2',
+                                      'members': ['user2@tests.dom',
+                                                  'user3@tests.dom']}
+                           })
+        app = TestApp(load_app(self.app_setup()))
+        # user1
+        payload = {'method': 'Password',
+                   'back': 'r/',
+                   'args': {'username': 'user1',
+                            'password': 'userpass'}, }
+        reg = 'cauth.service.managesf.ManageSFServicePlugin.register_new_user'
+        with patch(reg), patch('requests.get'):
+            response = app.post_json('/login',
+                                     payload)
+        self.assertEqual(response.status_int, 303)
+        self.assertEqual('http://localhost/r/', response.headers['Location'])
+        self.assertIn('Set-Cookie', response.headers)
+        auth_tkt = response.headers['Set-Cookie'].split(';')[0]
+        cookie = auth_tkt.split('=')[-1]
+        try:
+            cookie_dict = dict(x.split('=', 1)
+                               for x in urllib2.unquote(cookie).split(';'))
+        except:
+            raise Exception(urllib2.unquote(cookie).split(';'))
+        self.assertTrue('sf_groups' in cookie_dict, cookie_dict)
+        groups = cookie_dict['sf_groups'][1:-1].split('::')
+        self.assertTrue('group1' in groups, groups)
+        # user2
+        payload = {'method': 'Password',
+                   'back': 'r/',
+                   'args': {'username': 'user2',
+                            'password': 'userpass'}, }
+        reg = 'cauth.service.managesf.ManageSFServicePlugin.register_new_user'
+        with patch(reg), patch('requests.get'):
+            response = app.post_json('/login',
+                                     payload)
+        self.assertEqual(response.status_int, 303)
+        auth_tkt = response.headers['Set-Cookie'].split(';')[0]
+        cookie = auth_tkt.split('=')[-1]
+        cookie_dict = dict(x.split('=', 1)
+                           for x in urllib2.unquote(cookie).split(';'))
+        self.assertTrue('sf_groups' in cookie_dict, cookie_dict)
+        groups = cookie_dict['sf_groups'][1:-1].split('::')
+        self.assertTrue(('group1' in groups) and ('group2' in groups), groups)
+
+    # def tearDown(self):
+    #     os.unlink(self._config['groups']['local_groups']['config_file'])
 
 
 class TestCauthApp(FunctionalTest):
