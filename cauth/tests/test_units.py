@@ -17,12 +17,14 @@ import string
 from unittest import TestCase
 from mock import patch
 from M2Crypto import RSA, BIO
+import yaml
 
 from webtest import TestApp
 from pecan import load_app
 
 from cauth.tests.fixtures.auth import dummies
 from cauth.utils import common, exceptions
+from cauth.utils import localgroups
 from cauth.utils.userdetails import differentiate
 from cauth.tests.common import dummy_conf, FakeResponse, githubmock_request
 from cauth.model import db
@@ -47,6 +49,16 @@ def gen_rsa_key():
         key.save_key_bio(memory, cipher=None)
         p_key = memory.getvalue()
         file(conf.app['priv_key_path'], 'w').write(p_key)
+
+
+def gen_groups_config(groups_config=None):
+    conf = dummy_conf()
+    if groups_config is None:
+        groups_config = {'groups': {}}
+    if os.path.isfile(conf.groups['local_groups']['config_file']):
+        os.unlink(conf.groups['local_groups']['config_file'])
+    with file(conf.groups['local_groups']['config_file'], 'w') as f:
+        yaml.dump(groups_config, f)
 
 
 class FunctionalTest(TestCase):
@@ -94,6 +106,78 @@ class TestUtils(TestCase):
             sign.return_value = '123'
             self.assertEqual('a=arg1;b=arg2;sig=123',
                              common.create_ticket(a='arg1', b='arg2'))
+
+
+class TestLocalGroups(TestCase):
+    def conf_setup(self):
+        c = dummy_conf()
+        cfg = {'managesf': c.managesf,
+               'app': c.app,
+               'auth': c.auth,
+               'services': c.services,
+               'sqlalchemy': c.sqlalchemy,
+               'groups': c.groups}
+        return cfg
+
+    def test_get_user_groups(self):
+        groups_config = {'group1': {'description': 'group1',
+                                    'members': ['user1@tests.dom',
+                                                'user2@tests.dom']},
+                         'group2': {'description': 'group2',
+                                    'members': ['user2@tests.dom',
+                                                'user3@tests.dom']}
+                         }
+        gen_groups_config(groups_config)
+        lgm = localgroups.LocalGroupsManager(self.conf_setup())
+        user1 = {'login': 'user1',
+                 'email': 'user1@tests.dom'}
+        self.assertTrue(
+            'group1' in lgm.get_user_groups(user1),
+            lgm.get_user_groups(user1))
+        user2 = {'login': 'user2',
+                 'email': 'user2@tests.dom'}
+        self.assertTrue(
+            all(x in lgm.get_user_groups(user2)
+                for x in ['group1', 'group2']),
+            lgm.get_user_groups(user2))
+
+    # doesn't work because pecan.conf is weird
+    # def test_groups_in_ticket(self):
+    #     groups_config = {'group1': {'description': 'group1',
+    #                                 'members': ['user1@tests.dom',
+    #                                             'user2@tests.dom']},
+    #                      'group2': {'description': 'group2',
+    #                                 'members': ['user2@tests.dom',
+    #                                             'user3@tests.dom']}
+    #                      }
+    #     gen_groups_config(groups_config)
+    #     test_conf = self.conf_setup()
+    #     del test_conf['auth']['localdb']
+    #     self.assertTrue('groups' in test_conf)
+    #     app = TestApp(load_app(test_conf))
+    #     # user1
+    #     payload = {'method': 'Password',
+    #                'back': 'r/',
+    #                'args': {'username': 'user1',
+    #                         'password': 'userpass'}, }
+    #     reg = ('cauth.service.managesf.ManageSFServicePlugin'
+    #            '.register_new_user')
+    #     with patch(reg):
+    #         response = app.post_json('/login',
+    #                                  payload)
+    #     self.assertEqual(response.status_int, 303)
+    #     self.assertEqual('http://localhost/r/', response.headers['Location'])
+    #     self.assertIn('Set-Cookie', response.headers)
+    #     auth_tkt = response.headers['Set-Cookie'].split(';')[0]
+    #     cookie = auth_tkt.split('=')[-1]
+    #     try:
+    #         cookie_dict = dict(x.split('=', 1)
+    #                            for x in urllib2.unquote(cookie).split(';'))
+    #     except Exception:
+    #         raise Exception(urllib2.unquote(cookie).split(';'))
+    #     self.assertTrue('sf_groups' in cookie_dict, cookie_dict)
+    #     groups = cookie_dict['sf_groups'][1:-1].split('::')
+    #     self.assertTrue('group1' in groups, cookie_dict)
 
 
 class TestCauthApp(FunctionalTest):
