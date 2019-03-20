@@ -136,3 +136,10 @@ gerrit = {
 managesf = {
     'url': 'http://managesf.url',
 }
+
+groups = {
+    'local_groups': {
+        'config_file': '/etc/cauth/groups.yaml',
+        'lookup_key': 'email',
+    },
+}
