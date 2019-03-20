@@ -22,6 +22,7 @@ import urllib
 from M2Crypto import RSA
 from pecan import response, conf, render
 from cauth.utils import userdetails, exceptions
+from cauth.utils.localgroups import lgm  # LocalGroupsManager
 
 
 LOGOUT_MSG = "You have been successfully logged " \
@@ -74,10 +75,14 @@ def setup_response(user, back):
     # c_id is added to the cauth cookie so that the storyboard client can
     # authenticate to storyboard_api.
     # the c_id is stored in browser local storage after authentication.
-    ticket = create_ticket(uid=user['login'],
-                           cid=c_id,
-                           validuntil=(
-                               time.time() + conf.app['cookie_period']))
+    local_groups = lgm.get_user_groups(user)
+    ticket = create_ticket(
+        uid=user['login'],
+        cid=c_id,
+        # TODO separator should be configurable
+        # also we add [] to ensure we don't introduce pbs if groups are empty
+        sf_groups='[' + '::'.join(local_groups) + ']',
+        validuntil=(time.time() + conf.app['cookie_period']))
     enc_ticket = urllib.quote_plus(ticket)
     response.set_cookie('auth_pubtkt',
                         value=enc_ticket,

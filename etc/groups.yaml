@@ -1,0 +1,11 @@
+groups:
+  example_group:
+    description: an example of a group
+    members:
+    - user1
+    - user2
+  other_group:
+    description: another group
+    members:
+    - user2
+    - user3
