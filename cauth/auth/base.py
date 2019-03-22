@@ -65,6 +65,7 @@ class AuthProtocolPlugin(TransactionLogger):
                 'email': email,
                 'name': name,
                 'ssh_keys': ssh_keys,
+                'groups': groups,
                 'external_auth': {'domain': domain,
                                   'external_id': external_id}}
         :raises: UnauthenticatedError

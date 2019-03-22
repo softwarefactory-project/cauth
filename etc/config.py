@@ -107,6 +107,10 @@ auth = {
             'fullname': 'MELLON_urn:oid:2.5.4.42',
             'ssh_keys': 'MELLON_ssh_public_key',
             'uid': 'MELLON_idp_ID',
+            # we expect `MellonMergeEnvVars` to be left to its default value,
+            # meaning multi-valued fields will be available as
+            # XXX_0, XXX_1, ...
+            'groups': 'MELLON_idp_groups',
         }
     }
 

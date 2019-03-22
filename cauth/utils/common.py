@@ -77,12 +77,14 @@ def setup_response(user, back):
     # the c_id is stored in browser local storage after authentication.
     lgm = LocalGroupsManager(conf)
     local_groups = lgm.get_user_groups(user)
+    idp_groups = user.get('groups', [])
     ticket = create_ticket(
         uid=user['login'],
         cid=c_id,
         # TODO separator should be configurable
         # also we add [] to ensure we don't introduce pbs if groups are empty
         sf_groups='[' + '::'.join(local_groups) + ']',
+        groups='[' + '::'.join(idp_groups) + ']',
         validuntil=(time.time() + conf.app['cookie_period']))
     enc_ticket = urllib.quote_plus(ticket)
     response.set_cookie('auth_pubtkt',

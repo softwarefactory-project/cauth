@@ -477,6 +477,10 @@ class TestCauthApp(FunctionalTest):
                         'MELLON_email': 'swole@hero.org',
                         'MELLON_uid': '123456789',
                         'MELLON_keys': 'xxx:yyy:zzz',
+                        'MELLON_group': 'C-rank',
+                        'MELLON_group_0': 'C-rank',
+                        'MELLON_group_1': 'B-rank',
+                        'MELLON_group_2': 'S-rank',
                         'HTTP_REFERER': 'http://monster.org/idp'}
             response = self.app.post_json('/login/SAML2/',
                                           payload,
@@ -502,6 +506,18 @@ class TestCauthApp(FunctionalTest):
         self.assertEqual(response.status_int, 303)
         self.assertEqual('http://localhost/r/', response.headers['Location'])
         self.assertIn('Set-Cookie', response.headers)
+        # check groups
+        auth_tkt = response.headers['Set-Cookie'].split(';')[0]
+        cookie = auth_tkt.split('=')[-1]
+        try:
+            cookie_dict = dict(x.split('=', 1)
+                               for x in urllib2.unquote(cookie).split(';'))
+        except Exception:
+            raise Exception(urllib2.unquote(cookie).split(';'))
+        self.assertTrue('groups' in cookie_dict, cookie_dict)
+        groups = cookie_dict['groups'][1:-1].split('::')
+        for rank in ['C', 'B', 'S']:
+            self.assertTrue(('%s-rank' % rank) in groups, cookie_dict)
 
 
 # In order to test collision strategies we simulate two Identity Providers
