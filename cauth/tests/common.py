@@ -193,6 +193,7 @@ class dummy_conf():
                                   'fullname': 'MELLON_fullname',
                                   'email': 'MELLON_email',
                                   'uid': 'MELLON_uid',
+                                  'groups': 'MELLON_group',
                                   'ssh_keys': 'MELLON_keys'}}, }
         self.sqlalchemy = {'url': 'sqlite:///%s' % tempfile.mkstemp()[1],
                            'echo': False,

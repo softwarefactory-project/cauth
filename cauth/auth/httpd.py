@@ -63,6 +63,16 @@ class BaseHTTPdModuleAuthPlugin(base.AuthProtocolPlugin):
             self.terror("Invalid mapping %s",
                         transactionID, e)
             raise base.UnauthenticatedError("Invalid mapping")
+        mapping_test = request.environ.get(mapping['groups'])
+        if mapping_test is None:
+            self.terror("Invalid group mapping %s",
+                        transactionID, KeyError(mapping['groups']))
+            raise base.UnauthenticatedError("Invalid mapping")
+        i = 0
+        groups = []
+        while (mapping['groups'] + ('_%i' % i)) in request.environ:
+            groups.append(request.environ[mapping['groups'] + ('_%i' % i)])
+            i += 1
         ssh_keys = []
         if 'ssh_keys' in mapping.to_dict():
             idp_keys = request.environ[mapping['ssh_keys']]
@@ -72,6 +82,7 @@ class BaseHTTPdModuleAuthPlugin(base.AuthProtocolPlugin):
                 'email': email,
                 'name': fullname,
                 'ssh_keys': ssh_keys,
+                'groups': groups,
                 'external_auth': {'domain': self.get_domain(),
                                   'external_id': external_id},
                 'transactionID': transactionID}
