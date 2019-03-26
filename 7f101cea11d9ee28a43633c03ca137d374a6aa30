@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d316321_f45a832e",
+        "filename": "cauth/utils/common.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 7
+      },
+      "writtenOn": "2019-03-26T09:08:18Z",
+      "side": 1,
+      "message": "i think it would be less confusing if this was simply groups, without the sf_ prefix.",
+      "range": {
+        "startLine": 85,
+        "startChar": 8,
+        "endLine": 85,
+        "endChar": 17
+      },
+      "revId": "7f101cea11d9ee28a43633c03ca137d374a6aa30",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
