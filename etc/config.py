@@ -147,3 +147,12 @@ groups = {
         'lookup_key': 'email',
     },
 }
+
+zuul = {
+    'auth': {
+        'secret': 'zuul-jwt-secret',
+        'algorithm': 'HS256',
+        'aud': 'zuul.fqdn',
+        'iss': 'cauth.fqdn'
+    }
+}
