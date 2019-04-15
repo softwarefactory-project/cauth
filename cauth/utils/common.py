@@ -26,6 +26,8 @@ from pecan import response, conf, render
 from cauth.utils import userdetails, exceptions
 from cauth.utils.localgroups import LocalGroupsManager
 
+import jwt
+
 
 LOGOUT_MSG = "You have been successfully logged " \
              "out of all the Software factory services."
@@ -48,6 +50,20 @@ def create_ticket(**kwargs):
 
     ticket = ticket + ";sig=%s" % signature(ticket)
     return ticket
+
+
+def create_jwt(**kwargs):
+    if conf.get('zuul') is None:
+        return ''
+    token = {
+        'iss': conf.zuul['auth']['iss'],
+        'aud': conf.zuul['auth']['aud'],
+        'exp': time.time() + conf.app['cookie_period'],
+        'iat': time.time()}
+    token.update(kwargs)
+    return jwt.encode(token,
+                      key=conf.zuul['auth']['secret'],
+                      algorithm=conf.zuul['auth']['algorithm']).decode('utf-8')
 
 
 def pre_register_user(user):
@@ -80,9 +96,15 @@ def setup_response(user, back):
     lgm = LocalGroupsManager(conf)
     local_groups = lgm.get_user_groups(user)
     idp_groups = user.get('groups', [])
+    token = create_jwt(
+        sub=user['login'],
+        groups=local_groups + idp_groups,
+        email=user['email'],
+        full_name=user['name'])
     ticket = create_ticket(
         uid=user['login'],
         cid=c_id,
+        jwt=token,
         # TODO separator should be configurable
         # also we add [] to ensure we don't introduce pbs if groups are empty
         groups='[' + '::'.join(local_groups + idp_groups) + ']',

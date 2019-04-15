@@ -35,6 +35,7 @@ import pkg_resources
 import httmock
 import urlparse
 import urllib2
+import jwt
 
 
 def raise_(ex):
@@ -104,6 +105,70 @@ class TestUtils(TestCase):
             sign.return_value = '123'
             self.assertEqual('a=arg1;b=arg2;sig=123',
                              common.create_ticket(a='arg1', b='arg2'))
+
+
+class TestJWT(TestCase):
+    def conf_setup(self):
+        c = dummy_conf()
+        cfg = {'managesf': c.managesf,
+               'app': c.app,
+               'auth': c.auth,
+               'services': c.services,
+               'sqlalchemy': c.sqlalchemy,
+               'groups': c.groups,
+               'zuul': {'auth': {'secret': 'aThousandPushups',
+                                 'algorithm': 'HS256',
+                                 'aud': 'zuul.sftests.dom',
+                                 'iss': 'cauth.sftests.dom'
+                                 }
+                        }
+               }
+        return cfg
+
+    def test_jwt_in_ticket(self):
+        groups_config = {'group1': {'description': 'group1',
+                                    'members': ['user1@tests.dom',
+                                                'user2@tests.dom']},
+                         'group2': {'description': 'group2',
+                                    'members': ['user1@tests.dom',
+                                                'user3@tests.dom']}
+                         }
+        gen_groups_config(groups_config)
+        test_conf = self.conf_setup()
+        del test_conf['auth']['localdb']
+        app = TestApp(load_app(test_conf))
+        # user1
+        payload = {'method': 'Password',
+                   'back': 'r/',
+                   'args': {'username': 'user1',
+                            'password': 'userpass'}, }
+        reg = ('cauth.service.managesf.ManageSFServicePlugin'
+               '.register_new_user')
+        with patch(reg):
+            response = app.post_json('/login',
+                                     payload)
+        self.assertEqual(response.status_int, 303)
+        self.assertEqual('http://localhost/r/', response.headers['Location'])
+        self.assertIn('Set-Cookie', response.headers)
+        auth_tkt = response.headers['Set-Cookie'].split(';')[0]
+        cookie = auth_tkt.split('=')[-1]
+        try:
+            cookie_dict = dict(x.split('=', 1)
+                               for x in urllib2.unquote(cookie).split(';'))
+        except Exception:
+            raise Exception(urllib2.unquote(cookie).split(';'))
+        self.assertTrue('jwt' in cookie_dict, cookie_dict)
+        token = jwt.decode(cookie_dict['jwt'],
+                           key='aThousandPushups',
+                           algorithm='HS256',
+                           issuer='cauth.sftests.dom',
+                           audience='zuul.sftests.dom')
+        self.assertEqual(token.get('sub'), 'user1', token)
+        self.assertEqual(token.get('email'), 'user1@tests.dom', token)
+        self.assertEqual(token.get('iss'), 'cauth.sftests.dom', token)
+        self.assertEqual(token.get('aud'), 'zuul.sftests.dom', token)
+        self.assertEqual(set(token.get('groups')),
+                         set(['group1', 'group2']), token)
 
 
 class TestLocalGroups(TestCase):
