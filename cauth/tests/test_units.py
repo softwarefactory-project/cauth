@@ -16,7 +16,7 @@ import string
 
 from unittest import TestCase
 from mock import patch
-from M2Crypto import RSA, BIO
+from Crypto.PublicKey import RSA
 import yaml
 
 from webtest import TestApp
@@ -44,11 +44,9 @@ def raise_(ex):
 def gen_rsa_key():
     conf = dummy_conf()
     if not os.path.isfile(conf.app['priv_key_path']):
-        key = RSA.gen_key(2048, 65537, callback=lambda x, y, z: None)
-        memory = BIO.MemoryBuffer()
-        key.save_key_bio(memory, cipher=None)
-        p_key = memory.getvalue()
-        file(conf.app['priv_key_path'], 'w').write(p_key)
+        private_key = RSA.generate(1024, e=65537)
+        pem = private_key.exportKey("PEM")
+        file(conf.app['priv_key_path'], 'wb').write(pem)
 
 
 def gen_groups_config(groups_config=None):
