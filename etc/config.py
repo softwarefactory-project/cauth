@@ -54,6 +54,7 @@ auth = {
     # registered to another Identity Provider
     # Set strategy to "DIFFERENTIATE" to allow login with a slightly modified
     # login, based on the hash of the domain id + IdP uid.
+    'pubtkt_sign_algorithm': 'SHA1',
     'login_collision_strategy': "FORBID",
     'ldap': {
         'host': 'my.ldap.url',

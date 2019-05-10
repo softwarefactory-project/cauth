@@ -19,7 +19,11 @@ import hashlib
 import time
 import urllib
 
-from M2Crypto import RSA
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+
 from pecan import response, conf, render
 from cauth.utils import userdetails, exceptions
 from cauth.utils.localgroups import LocalGroupsManager
@@ -29,12 +33,37 @@ LOGOUT_MSG = "You have been successfully logged " \
              "out of all the Software factory services."
 
 
+PUBTKT_VALID_SIGN_ALGORITHMS = ['SHA1', 'DSS1', 'SHA224',
+                                'SHA256', 'SHA384', 'SHA512']
+
+
 def signature(data):
-    rsa_priv = RSA.load_key(conf.app['priv_key_path'])
-    dgst = hashlib.sha1(data).digest()
-    sig = rsa_priv.sign(dgst, 'sha1')
-    sig = base64.b64encode(sig)
-    return sig
+    private_key = serialization.load_pem_private_key(
+        open(conf.app['priv_key_path'], 'rb').read(),
+        password=None,
+        backend=default_backend()
+    )
+    algo_name = conf.auth.get('pubtkt_sign_algorithm', 'SHA1')
+    try:
+        if algo_name.upper() not in PUBTKT_VALID_SIGN_ALGORITHMS:
+            raise AttributeError()
+        algo = getattr(hashlib, algo_name.lower())
+        dgst = algo(data).digest()
+        _hash = getattr(hashes, algo_name.upper())
+        if algo_name.lower() == 'sha1':
+            _padding = padding.PKCS1v15()
+        else:
+            _padding = padding.PSS(
+                mgf=padding.MGF1(_hash()),
+                salt_length=padding.PSS.MAX_LENGTH)
+        signature = private_key.sign(
+            dgst,
+            _padding,
+            _hash()
+        )
+        return base64.b64encode(signature)
+    except AttributeError:
+        raise Exception("Unknown algorithm %s" % algo_name)
 
 
 def create_ticket(**kwargs):

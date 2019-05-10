@@ -16,7 +16,9 @@ import string
 
 from unittest import TestCase
 from mock import patch
-from M2Crypto import RSA, BIO
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 import yaml
 
 from webtest import TestApp
@@ -44,11 +46,17 @@ def raise_(ex):
 def gen_rsa_key():
     conf = dummy_conf()
     if not os.path.isfile(conf.app['priv_key_path']):
-        key = RSA.gen_key(2048, 65537, callback=lambda x, y, z: None)
-        memory = BIO.MemoryBuffer()
-        key.save_key_bio(memory, cipher=None)
-        p_key = memory.getvalue()
-        file(conf.app['priv_key_path'], 'w').write(p_key)
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=512,
+            backend=default_backend()
+        )
+        pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        file(conf.app['priv_key_path'], 'wb').write(pem)
 
 
 def gen_groups_config(groups_config=None):

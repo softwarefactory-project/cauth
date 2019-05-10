@@ -156,7 +156,8 @@ class dummy_conf():
                     'modules': ['cauth'],
                     'debug': True,
                     }
-        self.auth = {'ldap':
+        self.auth = {'pubtkt_sign_algorithm': 'sha256',
+                     'ldap':
                      {'host': 'ldap://ldap.tests.dom',
                          'dn': 'cn=%(username)s,ou=Users,dc=tests,dc=dom',
                          'sn': 'sn',
