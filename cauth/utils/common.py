@@ -15,11 +15,13 @@
 # under the License.
 
 import base64
-import hashlib
 import time
 import urllib
 
-from M2Crypto import RSA
+from Crypto.Hash import SHA
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.PublicKey import RSA
+
 from pecan import response, conf, render
 from cauth.utils import userdetails, exceptions
 from cauth.utils.localgroups import LocalGroupsManager
@@ -30,11 +32,11 @@ LOGOUT_MSG = "You have been successfully logged " \
 
 
 def signature(data):
-    rsa_priv = RSA.load_key(conf.app['priv_key_path'])
-    dgst = hashlib.sha1(data).digest()
-    sig = rsa_priv.sign(dgst, 'sha1')
-    sig = base64.b64encode(sig)
-    return sig
+    rsa_priv = RSA.importKey(open(conf.app['priv_key_path']).read())
+    digest = SHA.new()
+    digest.update(data)
+    sig = PKCS1_v1_5.new(rsa_priv).sign(digest)
+    return base64.b64encode(sig)
 
 
 def create_ticket(**kwargs):
