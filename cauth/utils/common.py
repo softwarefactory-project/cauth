@@ -19,7 +19,11 @@ import hashlib
 import time
 import urllib
 
-from M2Crypto import RSA
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+
 from pecan import response, conf, render
 from cauth.utils import userdetails, exceptions
 from cauth.utils.localgroups import LocalGroupsManager
@@ -30,11 +34,21 @@ LOGOUT_MSG = "You have been successfully logged " \
 
 
 def signature(data):
-    rsa_priv = RSA.load_key(conf.app['priv_key_path'])
-    dgst = hashlib.sha1(data).digest()
-    sig = rsa_priv.sign(dgst, 'sha1')
-    sig = base64.b64encode(sig)
-    return sig
+    private_key = serialization.load_pem_private_key(
+        open(conf.app['priv_key_path'], 'rb').read(),
+        password=None,
+        backend=default_backend()
+    )
+    dgst = hashlib.sha256(data).digest()
+    signature = private_key.sign(
+        dgst,
+        padding.PSS(
+            mgf=padding.MGF1(hashes.SHA256()),
+            salt_length=padding.PSS.MAX_LENGTH
+        ),
+        hashes.SHA256()
+    )
+    return base64.b64encode(signature)
 
 
 def create_ticket(**kwargs):
