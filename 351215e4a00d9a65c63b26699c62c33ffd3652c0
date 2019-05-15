@@ -16,6 +16,24 @@
       "revId": "351215e4a00d9a65c63b26699c62c33ffd3652c0",
       "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ade809e1_cdb973bb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 68
+      },
+      "writtenOn": "2019-05-15T13:42:59Z",
+      "side": 1,
+      "message": "python-cryptography implements signing with padding, which is the right way to do it. However, mod_auth_pubtkt checks signatures without padding (aka \"textbook RSA signature\"), thus always failing the signatures created in cauth.\n\npython-cryptography maintainers do not intend to add support for textbook RSA signature, and mod_auth_pubtkt would require some serious patching to add padding support as per https://mta.openssl.org/pipermail/openssl-users/2017-February/005338.html\n\nGiven that cauth is potentially short lived within SF but some improvements are needed to work on other features, we should go for the simplest solution possible.",
+      "parentUuid": "d12d1af9_0c7e4d7c",
+      "revId": "351215e4a00d9a65c63b26699c62c33ffd3652c0",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
     }
   ]
 }
