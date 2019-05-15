@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d12d1af9_0c7e4d7c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 201
+      },
+      "writtenOn": "2019-05-15T13:30:25Z",
+      "side": 1,
+      "message": "please also add reasoning python-cryptography (which IIUC is the preferred way to do crypto in Python now?)\n\nin Sprint review it was mentioned:\n\"move to cryptography lib, but mod_auth_pubtkt is too insecure and requires heavy patching\"\ncould you expand on that?",
+      "revId": "351215e4a00d9a65c63b26699c62c33ffd3652c0",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
