@@ -34,6 +34,24 @@
       "revId": "351215e4a00d9a65c63b26699c62c33ffd3652c0",
       "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "963d991f_3696f1c7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 201
+      },
+      "writtenOn": "2019-05-15T14:59:41Z",
+      "side": 1,
+      "message": "perfect, you can copy/paste this into commit msg!",
+      "parentUuid": "ade809e1_cdb973bb",
+      "revId": "351215e4a00d9a65c63b26699c62c33ffd3652c0",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
     }
   ]
 }
