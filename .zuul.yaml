@@ -1,0 +1,21 @@
+- project:
+    templates:
+      - sf-ci-jobs
+      - sf-ci-packages-publish
+      - sf-ci-python-jobs
+    check:
+      jobs:
+        - tox-py36:
+            nodeset: fedora-latest-runc
+            voting: true
+        - tox-pep8-py36:
+            nodeset: fedora-latest-runc
+            voting: true
+    gate:
+      jobs:
+        - tox-py36:
+            nodeset: fedora-latest-runc
+            voting: true
+        - tox-pep8-py36:
+            nodeset: fedora-latest-runc
+            voting: true
