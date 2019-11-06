@@ -20,7 +20,7 @@ import uuid
 
 def make_tid():
     """Return a new random string"""
-    return hashlib.md5(str(uuid.uuid4())).hexdigest()[:8]
+    return hashlib.md5(str(uuid.uuid4()).encode()).hexdigest()[:8]
 
 
 def ensure_tid(auth_context):
