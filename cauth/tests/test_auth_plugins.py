@@ -19,7 +19,6 @@ import crypt
 import json
 import ldap
 import tempfile
-from contextlib import nested
 from unittest import TestCase
 
 import keystoneclient.exceptions as k_exc
@@ -226,16 +225,16 @@ class TestPasswordAuthPlugin(BaseTestAuthPlugin):
             with self.assertRaises(base.UnauthenticatedError):
                 driver.authenticate(**auth_context)
         # test unicode username
-        auth_context = {'username': u'自来也',
+        auth_context = {'username': '自来也',
                         'password': 'userpass'}
-        expected = {'login': u'自来也',
+        expected = {'login': '自来也',
                     'email': 'rasengan@sennin.com',
                     'name': 'The Gallant Jiraiya',
                     'ssh_keys': [{'key': 'Icha Icha Paradise'}, ],
                     'external_auth': {'domain': d,
-                                      'external_id': u'自来也'}}
+                                      'external_id': '自来也'}}
         with patch('requests.get') as g:
-            _response = {'username': u'自来也',
+            _response = {'username': '自来也',
                          'fullname': 'The Gallant Jiraiya',
                          'email': 'rasengan@sennin.com',
                          'sshkey': 'Icha Icha Paradise'}
@@ -537,29 +536,25 @@ class TestOpenIDConnectAuthPlugin(BaseTestAuthPlugin):
         response = MagicMock()
         auth_context = {'back': '/',
                         'response': response}
-        patches = [
-            patch('requests.request'),
-            patch('cauth.model.db.put_url'),
-        ]
-        with nested(*patches) as (r, c):
-            r.return_value = FakeResponse(200,
-                                          content=json.dumps(
-                                              OPENID_CONNECT_PROVIDER_CONFIG),
-                                          is_json=True)
-            r.return_value.text = json.dumps(OPENID_CONNECT_PROVIDER_CONFIG)
-            self.driver.authenticate(**auth_context)
-            self.assertIn(u'https://openid.com/o/oauth2/v2/auth?',
-                          response.location)
-            self.assertEqual(302, response.status_code)
+        with patch('requests.request') as r:
+            with patch('cauth.model.db.put_url'):
+                r.return_value = FakeResponse(
+                    200,
+                    content=json.dumps(
+                        OPENID_CONNECT_PROVIDER_CONFIG),
+                    is_json=True)
+                r.return_value.text = json.dumps(
+                    OPENID_CONNECT_PROVIDER_CONFIG)
+                self.driver.authenticate(**auth_context)
+                self.assertIn('https://openid.com/o/oauth2/v2/auth?',
+                              response.location)
+                self.assertEqual(302, response.status_code)
 
     # This test needs to be exited the after the redirect
     def test_02_authenticate(self):
         """Test openid connect authentication callback."""
         qs = "?state=dumb&code=42&authuser=0&session_state=1&prompt=none#"
-        patches = [
-            patch('requests.request'),
-        ]
-        with nested(*patches) as (r, ):
+        with patch('requests.request') as r:
             r.return_value = FakeResponse(200,
                                           content=json.dumps(
                                               OPENID_CONNECT_TOKEN),
@@ -572,7 +567,7 @@ class TestOpenIDConnectAuthPlugin(BaseTestAuthPlugin):
             }
             # TODO: properly encode the token to avoid the BadSyntax: error
             # In the meantime, just test the begining of authentication phase
-            with self.assertRaisesRegexp(
+            with self.assertRaisesRegex(
                     base.UnauthenticatedError, 'Couldn\'t fetch user-info'):
                 self.driver._authenticate("dumb", "42", qs, "FAKE-TID")
 
@@ -584,10 +579,11 @@ class TestOpenIDConnectAuthPlugin(BaseTestAuthPlugin):
                                     'name': 'family_name',
                                     'uid': 'picture',
                                     'ssh_keys': None}
-        patches = [
-            patch.object(C, 'do_access_token_request'),
-        ]
-        with nested(*patches) as (datr, ):
+        # patches = [
+        #     patch.object(C, 'do_access_token_request'),
+        # ]
+        # with nested(*patches) as (datr, ):
+        with patch.object(C, 'do_access_token_request') as datr:
 
             class fake:
                 def __init__(self, d):

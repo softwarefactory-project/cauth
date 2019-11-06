@@ -19,7 +19,7 @@ import os
 import tempfile
 
 import httmock
-import urlparse
+import urllib.parse
 
 
 class FakeResponse():
@@ -92,7 +92,7 @@ def githubmock_request(url, request):
     # Handle a token request
     if request.method == 'POST':
         token = None
-        code = urlparse.parse_qs(request.body)['code'][0]
+        code = urllib.parse.parse_qs(request.body)['code'][0]
         for user in users:
             if users[user]['code'] == code:
                 token = users[user]['token']
@@ -107,17 +107,19 @@ def githubmock_request(url, request):
         for user in users:
             auth_header = request.headers['Authorization']
             _token = users[user]['token']
+            __token = _token + ':x-oauth-basic'
+            print(__token)
             # handle oauth
             if _token in auth_header:
                 u = user
                 break
             # handle API key auth
-            elif base64.b64encode(_token + ':x-oauth-basic') in auth_header:
+            elif base64.b64encode(__token.encode()).decode() in auth_header:
                 u = user
                 break
         if not u:
             # user not found, do not authorize
-            error_content = {u'message': u'Bad credentials'}
+            error_content = {'message': 'Bad credentials'}
 
             return httmock.response(401, error_content)
         if 'keys' in url.path:
