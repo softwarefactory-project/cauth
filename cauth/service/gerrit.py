@@ -94,7 +94,7 @@ class GerritServicePlugin(base.BaseServicePlugin):
     def register_new_user(self, user):
         if not self.conf.get("register_user", True):
             return
-        _user = {"name": unicode(user['name']), "email": str(user['email'])}
+        _user = {"name": str(user['name']), "email": str(user['email'])}
         data = json.dumps(_user, default=lambda o: o.__dict__)
 
         headers = {"Content-type": "application/json"}
