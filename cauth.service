@@ -1,0 +1,13 @@
+[Unit]
+Description=Cauth API Service
+After=syslog.target network.target mariadb.service
+
+[Service]
+Type=simple
+User=cauth
+Group=cauth
+SyslogIdentifier=cauth
+ExecStart=/bin/gunicorn_pecan-3 --workers 1 --access-logfile - --access-logformat '%(h)s %(l)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"' --chdir / -b 0.0.0.0:8888 --name cauth /etc/cauth/config.py
+
+[Install]
+WantedBy=multi-user.target

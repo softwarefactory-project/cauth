@@ -19,7 +19,6 @@ import crypt
 import ldap
 import logging
 import requests
-import urllib
 
 from basicauth import encode
 try:
@@ -93,7 +92,7 @@ class LDAPAuthPlugin(BasePasswordAuthPlugin):
         except ldap.LDAPError as e:
             if getattr(self, 'standalone', True):
                 self.terror("Client unable to bind on LDAP: %s",
-                            transactionID, e.message)
+                            transactionID, e)
             raise base.UnauthenticatedError("LDAP error")
         if not password or not username:
             if getattr(self, 'standalone', True):
@@ -141,12 +140,11 @@ class ManageSFAuthPlugin(BasePasswordAuthPlugin):
         transactionID = transaction.ensure_tid(auth_context)
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
-        bind_url = urllib.basejoin(self.conf['managesf_url'], '/bind')
+        bind_url = self.conf['managesf_url'].rstrip('/') + '/bind'
         headers = {"Authorization": encode(username.encode('utf8'),
                                            password.encode('utf8'))}
         self.tdebug("Binding to managesf", transactionID)
         response = requests.get(bind_url, headers=headers)
-
         if response.status_code > 399:
             self.tdebug("localdb auth failed for user %s, reason: %s",
                         transactionID, username, response.status_code)
@@ -258,7 +256,7 @@ class PasswordAuthPlugin(BasePasswordAuthPlugin):
             try:
                 user = plugin.authenticate(**auth_context)
             except base.UnauthenticatedError as e:
-                errors.append("[%s: %s]" % (plugin.name, e.message))
+                errors.append("[%s: %s]" % (plugin.name, e))
         if user:
             user['transactionID'] = transactionID
             return user

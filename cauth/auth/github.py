@@ -52,7 +52,7 @@ class BaseGithubAuthPlugin(base.AuthProtocolPlugin):
             user_orgs = [org['login'] for org in user_orgs]
 
             allowed_orgs = allowed_orgs.split(',')
-            allowed_orgs = filter(None, allowed_orgs)
+            allowed_orgs = [_f for _f in allowed_orgs if _f]
             allowed = set(user_orgs) & set(allowed_orgs)
             if not allowed:
                 self.twarning("Organization %s are not allowed",

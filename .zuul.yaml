@@ -1,0 +1,26 @@
+- project:
+    templates:
+      - sf-ci-jobs
+      - sf-ci-packages-publish
+    check:
+      jobs:
+        - tox-py36:
+            vars:
+              tox_install_siblings: false
+            nodeset:
+              nodes:
+                - name: fedora
+                  label: cloud-fedora-30-small
+        - tox-pep8:
+            nodeset: fedora-latest-runc
+    gate:
+      jobs:
+        - tox-py36:
+            vars:
+              tox_install_siblings: false
+            nodeset:
+              nodes:
+                - name: fedora
+                  label: cloud-fedora-30-small
+        - tox-pep8:
+            nodeset: fedora-latest-runc
