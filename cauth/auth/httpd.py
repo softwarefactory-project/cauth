@@ -15,7 +15,7 @@
 # under the License.
 
 import logging
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 from pecan import request
 from pecan.core import redirect

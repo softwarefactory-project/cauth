@@ -1,0 +1,30 @@
+- project:
+#    templates:
+#      - sf-ci-jobs
+#      - sf-ci-packages-publish
+    check:
+      jobs:
+        - tox-py36:
+            nodeset:
+              nodes:
+                - name: fedora
+                  label: cloud-fedora-31-small
+        - tox-pep8:
+            nodeset: fedora-latest-runc
+        - sf-rpm-build
+    gate:
+      jobs:
+        - tox-py36:
+            nodeset:
+              nodes:
+                - name: fedora
+                  label: cloud-fedora-31-small
+        - tox-pep8-py36:
+            nodeset: fedora-latest-runc
+            voting: true
+        - sf-rpm-build:
+            dependencies:
+              - wait-for-changes-ahead
+    release:
+      jobs:
+        - sf-rpm-publish
