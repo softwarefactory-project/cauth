@@ -16,7 +16,9 @@
 
 import base64
 import time
-import urllib
+import urllib.request
+import urllib.parse
+import urllib.error
 
 from Crypto.Hash import SHA
 from Crypto.Signature import PKCS1_v1_5
@@ -34,7 +36,7 @@ LOGOUT_MSG = "You have been successfully logged " \
 def signature(data):
     rsa_priv = RSA.importKey(open(conf.app['priv_key_path']).read())
     digest = SHA.new()
-    digest.update(data)
+    digest.update(data.encode())
     sig = PKCS1_v1_5.new(rsa_priv).sign(digest)
     return base64.b64encode(sig)
 
@@ -87,10 +89,10 @@ def setup_response(user, back):
         # also we add [] to ensure we don't introduce pbs if groups are empty
         groups='[' + '::'.join(local_groups + idp_groups) + ']',
         validuntil=(time.time() + conf.app['cookie_period']))
-    enc_ticket = urllib.quote_plus(ticket)
+    enc_ticket = urllib.parse.quote_plus(ticket)
     response.set_cookie('auth_pubtkt',
                         value=enc_ticket,
                         max_age=conf.app['cookie_period'],
                         overwrite=True)
     response.status_code = 303
-    response.location = urllib.unquote_plus(back).decode("utf8")
+    response.location = urllib.parse.unquote_plus(back)
