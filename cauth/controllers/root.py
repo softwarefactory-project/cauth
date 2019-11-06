@@ -16,7 +16,7 @@
 # under the License.
 
 import logging
-from urllib import unquote
+from urllib.parse import unquote
 
 from pecan import expose, request, response, conf
 from pecan.rest import RestController
@@ -56,19 +56,19 @@ class RootController(object):
         login.github = github.GithubController()
         login.githubAPIkey = github.PersonalAccessTokenGithubController()
     except exceptions.AuthProtocolNotAvailableError as e:
-        logger.debug("%s - skipping callback endpoint" % e.message)
+        logger.debug("%s - skipping callback endpoint" % e)
     try:
         login.oauth2 = oauth2.OAuth2Controller()
     except exceptions.AuthProtocolNotAvailableError as e:
-        logger.debug("%s - skipping callback endpoint" % e.message)
+        logger.debug("%s - skipping callback endpoint" % e)
     try:
         login.openid = openid.OpenIDController()
     except exceptions.AuthProtocolNotAvailableError as e:
-        logger.debug("%s - skipping callback endpoint" % e.message)
+        logger.debug("%s - skipping callback endpoint" % e)
     try:
         login.openid_connect = openid_connect.OpenIDConnectController()
     except exceptions.AuthProtocolNotAvailableError as e:
-        logger.debug("%s - skipping callback endpoint" % e.message)
+        logger.debug("%s - skipping callback endpoint" % e)
     try:
         login.SAML2 = SAML2.SAML2Controller()
     except exceptions.AuthProtocolNotAvailableError as e:
