@@ -42,7 +42,7 @@ class LocalGroupsManager(object):
         self.lookup_key = 'email'
         try:
             groups_config = config['groups']
-        except Exception as e:
+        except Exception:
             self.log.info('No groups configuration found, '
                           'groups will not be available: %s' % conf)
             return
@@ -56,7 +56,7 @@ class LocalGroupsManager(object):
             self.lookup_key = local_groups_config['lookup_key']
         self.log.debug('Loading "%s"' % local_groups_config['config_file'])
         try:
-            with file(local_groups_config['config_file']) as gf:
+            with open(local_groups_config['config_file']) as gf:
                 _groups = yaml.load(gf, Loader=yaml.SafeLoader)
             if not isinstance(_groups, dict):
                 raise TypeError(
