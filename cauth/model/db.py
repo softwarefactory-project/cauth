@@ -38,7 +38,7 @@ MAX_BLOB_LEN = MAX_URL_LEN = 4096
 
 def gen_state(len):
     lst = [random.choice(string.ascii_letters + string.digits)
-           for n in xrange(len)]
+           for n in range(len)]
     return "".join(lst)
 
 

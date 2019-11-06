@@ -15,7 +15,7 @@
 # under the License.
 
 import logging
-from urllib import unquote
+from urllib.parse import unquote
 
 from stevedore import driver
 from pecan import expose, response, abort, request, conf
@@ -41,7 +41,7 @@ class APIKeyController(RestController):
                     invoke_args=(conf,)).driver
                 self.services.append(plugin)
             except base.ServiceConfigurationError as e:
-                logger.error(e.message)
+                logger.error(str(e))
 
     # Obviously these operations can only be done once authenticated
     def get_pubtkt_infos(self):

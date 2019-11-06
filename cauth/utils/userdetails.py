@@ -45,7 +45,7 @@ class UserDetailsCreator(transaction.TransactionLogger):
                     invoke_args=(conf,)).driver
                 self.services.append(plugin)
             except base.ServiceConfigurationError as e:
-                self.logger.error(e.message)
+                self.logger.error(str(e))
 
     def create_user(self, user):
         external_info = user.get('external_auth', {})
