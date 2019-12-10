@@ -3,7 +3,7 @@
 
 Name:    cauth
 Version: 0.15.0.1.gb9d45f4
-Release: 1%{?dist}
+Release: 2%{?dist}
 Summary: %{sum}
 
 License: ASL 2.0
@@ -24,7 +24,6 @@ BuildRequires: python3-mock
 BuildRequires: httpd
 BuildRequires: mod_auth_pubtkt
 BuildRequires: mod_auth_mellon
-BuildRequires: yaml-cpp
 BuildRequires: python3-crypto
 BuildRequires: python3-sphinx
 BuildRequires: python3-sqlalchemy
@@ -122,6 +121,9 @@ exit 0
 %attr(0444, root, cauth) %config(noreplace) %{_sysconfdir}/cauth/templates/login.html
 
 %changelog
+* Tue Dec 10 2019 Tristan Cacqueray <tdecacqu@redhat.com> - 0.15.0.1.gb9d45f4-2
+- Remove yaml-cpp build require
+
 * Wed Nov 06 2019 Fabien Boucher <fboucher@redhat.com> - 0.15.0-1
 - Python packaging
 
