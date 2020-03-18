@@ -1,0 +1,9 @@
+Code-Review+2: Fabien Boucher <fboucher@redhat.com>
+Code-Review+1: Javier Peña <jpena@redhat.com>
+Workflow+1: Fabien Boucher <fboucher@redhat.com>
+Verified+2: Zuul CI <zuul@softwarefactory-project.io>
+Submitted-by: Zuul CI <zuul@softwarefactory-project.io>
+Submitted-at: Wed, 18 Mar 2020 16:49:00 +0000
+Reviewed-on: https://softwarefactory-project.io/r/17787
+Project: software-factory/cauth
+Branch: refs/heads/master
