@@ -170,8 +170,9 @@ class TestLocalGroups(TestCase):
         auth_tkt = response.headers['Set-Cookie'].split(';')[0]
         cookie = auth_tkt.split('=')[-1]
         try:
-            cookie_dict = dict(x.split('=', 1)
-                               for x in urllib.parse.unquote(cookie).split(';'))
+            cookie_dict = dict(
+                x.split('=', 1)
+                for x in urllib.parse.unquote(cookie).split(';'))
         except Exception:
             raise Exception(urllib.parse.unquote(cookie).split(';'))
         self.assertTrue('groups' in cookie_dict, cookie_dict)
