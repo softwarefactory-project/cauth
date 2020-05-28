@@ -12,7 +12,7 @@
                 - name: fedora
                   label: cloud-fedora-30-small
         - tox-pep8:
-            nodeset: fedora-latest-runc
+            nodeset: fedora-latest-pod
     gate:
       queue: sf
       jobs:
@@ -24,4 +24,4 @@
                 - name: fedora
                   label: cloud-fedora-30-small
         - tox-pep8:
-            nodeset: fedora-latest-runc
+            nodeset: fedora-latest-pod

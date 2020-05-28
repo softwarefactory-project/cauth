@@ -18,7 +18,9 @@
 import logging
 import requests
 from requests.exceptions import ConnectionError
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 
 from cauth.auth import base
 from cauth.utils import transaction
@@ -105,10 +107,10 @@ class BaseOAuth2Plugin(base.AuthProtocolPlugin):
         response.status_code = 302
         location = self.auth_url + "?" + \
             urllib.parse.urlencode({'client_id': self.conf['client_id'],
-                              'redirect_uri': self.conf['redirect_uri'],
-                              'state': state,
-                              'scope': scope,
-                              'response_type': 'code'})
+                                    'redirect_uri': self.conf['redirect_uri'],
+                                    'state': state,
+                                    'scope': scope,
+                                    'response_type': 'code'})
         self.tdebug("Redirecting for OAuth2 authentication (step 1) to %s",
                     transactionID, location)
         response.location = location

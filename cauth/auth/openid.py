@@ -18,7 +18,9 @@
 import logging
 import requests
 from pecan import request
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 
 from cauth.auth import base
 from cauth.utils import transaction
