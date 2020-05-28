@@ -54,11 +54,14 @@ class LocalUserAuthPlugin(BasePasswordAuthPlugin):
         username = auth_context.get('username', '')
         password = auth_context.get('password', '')
         user = self.conf.get(username)
+        email = user.get('mail')
+        if email and isinstance(email, bytes):
+            email = email.decode('utf-8')
         if user:
             salted_password = user.get('password')
             if salted_password == crypt.crypt(password, salted_password):
                 return {'login': username,
-                        'email': user.get('mail'),
+                        'email': email,
                         'name': user.get('lastname'),
                         'ssh_keys': [],
                         'external_auth': {'domain': self.get_domain(),
@@ -115,10 +118,12 @@ class LDAPAuthPlugin(BasePasswordAuthPlugin):
                                attrlist=[self.conf['sn'], self.conf['mail']])
         if len(result) == 1:
             user = result[0]  # user is a tuple
-            mail = user[1].get(self.conf['mail'], [None])
+            email = user[1].get(self.conf['mail'], [None])[0]
+            if email and isinstance(email, bytes):
+                email = email.decode('utf-8')
             lastname = user[1].get(self.conf['sn'], [None])
             return {'login': username,
-                    'email': mail[0],
+                    'email': email,
                     'name': lastname[0],
                     'ssh_keys': [],
                     'external_auth': {'domain': self.get_domain(),
