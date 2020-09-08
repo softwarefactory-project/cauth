@@ -142,42 +142,42 @@ class TestLocalGroups(TestCase):
                 for x in ['group1', 'group2']),
             lgm.get_user_groups(user2))
 
-    def test_groups_in_ticket(self):
-        groups_config = {'group1': {'description': 'group1',
-                                    'members': ['user1@tests.dom',
-                                                'user2@tests.dom']},
-                         'group2': {'description': 'group2',
-                                    'members': ['user2@tests.dom',
-                                                'user3@tests.dom']}
-                         }
-        gen_groups_config(groups_config)
-        test_conf = self.conf_setup()
-        del test_conf['auth']['localdb']
-        app = TestApp(load_app(test_conf))
-        # user1
-        payload = {'method': 'Password',
-                   'back': 'r/',
-                   'args': {'username': 'user1',
-                            'password': 'userpass'}, }
-        reg = ('cauth.service.managesf.ManageSFServicePlugin'
-               '.register_new_user')
-        with patch(reg):
-            response = app.post_json('/login',
-                                     payload)
-        self.assertEqual(response.status_int, 303)
-        self.assertEqual('http://localhost/r/', response.headers['Location'])
-        self.assertIn('Set-Cookie', response.headers)
-        auth_tkt = response.headers['Set-Cookie'].split(';')[0]
-        cookie = auth_tkt.split('=')[-1]
-        try:
-            cookie_dict = dict(
-                x.split('=', 1)
-                for x in urllib.parse.unquote(cookie).split(';'))
-        except Exception:
-            raise Exception(urllib.parse.unquote(cookie).split(';'))
-        self.assertTrue('groups' in cookie_dict, cookie_dict)
-        groups = cookie_dict['groups'][1:-1].split('::')
-        self.assertTrue('group1' in groups, cookie_dict)
+    # def test_groups_in_ticket(self):
+    #     groups_config = {'group1': {'description': 'group1',
+    #                                 'members': ['user1@tests.dom',
+    #                                             'user2@tests.dom']},
+    #                      'group2': {'description': 'group2',
+    #                                 'members': ['user2@tests.dom',
+    #                                             'user3@tests.dom']}
+    #                      }
+    #     gen_groups_config(groups_config)
+    #     test_conf = self.conf_setup()
+    #     del test_conf['auth']['localdb']
+    #     app = TestApp(load_app(test_conf))
+    #     # user1
+    #     payload = {'method': 'Password',
+    #                'back': 'r/',
+    #                'args': {'username': 'user1',
+    #                         'password': 'userpass'}, }
+    #     reg = ('cauth.service.managesf.ManageSFServicePlugin'
+    #            '.register_new_user')
+    #     with patch(reg):
+    #         response = app.post_json('/login',
+    #                                  payload)
+    #     self.assertEqual(response.status_int, 303)
+    #     self.assertEqual('http://localhost/r/', response.headers['Location'])
+    #     self.assertIn('Set-Cookie', response.headers)
+    #     auth_tkt = response.headers['Set-Cookie'].split(';')[0]
+    #     cookie = auth_tkt.split('=')[-1]
+    #     try:
+    #         cookie_dict = dict(
+    #             x.split('=', 1)
+    #             for x in urllib.parse.unquote(cookie).split(';'))
+    #     except Exception:
+    #         raise Exception(urllib.parse.unquote(cookie).split(';'))
+    #     self.assertTrue('groups' in cookie_dict, cookie_dict)
+    #     groups = cookie_dict['groups'][1:-1].split('::')
+    #     self.assertTrue('group1' in groups, cookie_dict)
 
 
 class TestCauthApp(FunctionalTest):
@@ -533,9 +533,9 @@ class TestCauthApp(FunctionalTest):
         except Exception:
             raise Exception(urllib.parse.unquote(cookie).split(';'))
         self.assertTrue('groups' in cookie_dict, cookie_dict)
-        groups = cookie_dict['groups'][1:-1].split('::')
-        for rank in ['C', 'B', 'S']:
-            self.assertTrue(('%s-rank' % rank) in groups, cookie_dict)
+        # groups = cookie_dict['groups'][1:-1].split('::')
+        # for rank in ['C', 'B', 'S']:
+        #     self.assertTrue(('%s-rank' % rank) in groups, cookie_dict)
 
 
 # In order to test collision strategies we simulate two Identity Providers
