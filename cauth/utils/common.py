@@ -79,15 +79,16 @@ def setup_response(user, back):
     # c_id is added to the cauth cookie so that the storyboard client can
     # authenticate to storyboard_api.
     # the c_id is stored in browser local storage after authentication.
-    lgm = LocalGroupsManager(conf)
-    local_groups = lgm.get_user_groups(user)
-    idp_groups = user.get('groups', [])
+    # lgm = LocalGroupsManager(conf)
+    # local_groups = lgm.get_user_groups(user)
+    # idp_groups = user.get('groups', [])
     ticket = create_ticket(
         uid=user['login'],
         cid=c_id,
         # TODO separator should be configurable
         # also we add [] to ensure we don't introduce pbs if groups are empty
-        groups='[' + '::'.join(local_groups + idp_groups) + ']',
+        groups='[]',
+        # groups='[' + '::'.join(local_groups + idp_groups) + ']',
         validuntil=(time.time() + conf.app['cookie_period']))
     enc_ticket = urllib.parse.quote_plus(ticket)
     response.set_cookie('auth_pubtkt',
