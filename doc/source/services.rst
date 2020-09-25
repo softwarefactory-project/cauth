@@ -34,10 +34,6 @@ Add the following section to cauth's config.py:
       'url': 'http://gerrit.url',
       'admin_user': 'admin',
       'admin_password': 'password',
-      'db_host': 'gerrit_mysql_address',
-      'db_name': 'gerrit_mysql_db',
-      'db_user': 'gerrit_mysql_username',
-      'db_password': 'gerrit_sql_pwd'
   }
 
 * **url** is the gerrit URL

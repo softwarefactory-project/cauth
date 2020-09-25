@@ -143,10 +143,6 @@ class dummy_conf():
         self.gerrit = {'url': 'XXX',
                        'password': 'wxcvbn',
                        'register_user': True,
-                       'db_host': 'mysql.tests.dom',
-                       'db_name': 'gerrit',
-                       'db_user': 'gerrit',
-                       'db_password': 'wxcvbn',
                        }
         self.app = {'priv_key_path': '/tmp/priv_key',
                     'cookie_domain': 'tests.dom',

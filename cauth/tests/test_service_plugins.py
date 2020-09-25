@@ -15,7 +15,7 @@
 import json
 from unittest import TestCase
 
-from mock import patch, Mock
+from mock import patch
 from stevedore import driver
 
 from cauth.tests.common import dummy_conf, FakeResponse
@@ -30,12 +30,6 @@ class TestGerritPlugin(TestCase):
     def tearDownClass(cls):
         pass
 
-    def gerrit_add_sshkeys_mock(self, *args, **kwargs):
-        self.assertIn('data', kwargs)
-        self.assertIn('auth', kwargs)
-        self.key_amount_added += 1
-        return FakeResponse(200)
-
     def gerrit_get_account_id_mock(self, *args, **kwargs):
         data = json.dumps({'_account_id': 42})
         # Simulate the garbage that occurs in live tests
@@ -47,79 +41,6 @@ class TestGerritPlugin(TestCase):
         # Simulate the garbage that occurs in live tests
         data = 'garb' + data
         return FakeResponse(200, data)
-
-    def test_gerrit_install_ssh_keys(self):
-        ger = driver.DriverManager(
-            namespace='cauth.service',
-            name='gerrit',
-            invoke_on_load=True,
-            invoke_args=(self.conf,)).driver
-        self.key_amount_added = 0
-        keys = [{'key': 'k1'}, {'key': 'k2'}]
-        with patch('cauth.service.gerrit.requests') as r:
-            r.post = self.gerrit_add_sshkeys_mock
-            ger.add_sshkeys('john', keys)
-        self.assertEqual(self.key_amount_added, len(keys))
-
-    def test_gerrit_add_in_acc_external(self):
-        class FakeDB():
-            def __init__(self, success=True):
-                self.success = success
-
-            def cursor(self):
-                return FakeCursor(self.success)
-
-            def commit(self):
-                pass
-
-        class FakeCursor():
-            def __init__(self, success):
-                self.success = success
-
-            def execute(self, sql):
-                if not self.success:
-                    raise Exception
-
-        ger = driver.DriverManager(
-            namespace='cauth.service',
-            name='gerrit',
-            invoke_on_load=True,
-            invoke_args=(self.conf,)).driver
-        with patch('cauth.service.gerrit.pymysql') as m:
-            m.connect = lambda *args, **kwargs: FakeDB()
-            ret = ger.add_account_as_external(42, 'john')
-        self.assertEqual(True, ret)
-        with patch('cauth.service.gerrit.pymysql') as m:
-            m.connect = lambda *args, **kwargs: FakeDB(False)
-            ret = ger.add_account_as_external(42, 'john')
-        self.assertEqual(False, ret)
-
-    def test_create_gerrit_user(self):
-        ger = driver.DriverManager(
-            namespace='cauth.service',
-            name='gerrit',
-            invoke_on_load=True,
-            invoke_args=(self.conf,)).driver
-        with patch('cauth.service.gerrit.requests') as r:
-            r.put = lambda *args, **kwargs: FakeResponse(200)
-            r.get = self.gerrit_get_account_id_mock
-            ger.add_account_as_external = Mock()
-            ger.register_new_user({'login': 'john',
-                                   'email': 'john@tests.dom',
-                                   'name': 'John Doe',
-                                   'ssh_keys': [],
-                                   'external_id': 42})
-            self.assertEqual(True, ger.add_account_as_external.called)
-        with patch('cauth.service.gerrit.requests') as r:
-            r.put = lambda *args, **kwargs: FakeResponse(200)
-            r.get = self.gerrit_get_account_id_mock2
-            ger.add_account_as_external = Mock()
-            ger.register_new_user({'login': 'john',
-                                   'email': 'john@tests.dom',
-                                   'name': 'John Doe',
-                                   'ssh_keys': [],
-                                   'external_id': 42})
-            self.assertEqual(False, ger.add_account_as_external.called)
 
     def test_create_managesf_user(self):
         msf = driver.DriverManager(
