@@ -31,40 +31,6 @@ class GerritServicePlugin(base.BaseServicePlugin):
 
     _config_section = "gerrit"
 
-    def add_sshkeys(self, username, keys):
-        """add keys for username."""
-        url = self.conf['url'] + "a/accounts/%s/sshkeys" % username
-        for key in keys:
-            logger.debug("Adding key %s for user %s" % (key.get('key'),
-                                                        username))
-            response = requests.post(url, data=key.get('key'),
-                                     auth=("admin", self.conf['password']))
-
-            if not response.ok:
-                msg = 'Failed to add ssh key %s of %s: %s' % (key.get('key'),
-                                                              username,
-                                                              response)
-                logger.error(msg)
-
-    def add_account_as_external(self, account_id, username):
-        # TODO(mhu) there's got to be a cleaner way. pygerrit ?
-        db = pymysql.connect(passwd=self.conf['db_password'],
-                             db=self.conf['db_name'],
-                             host=self.conf['db_host'],
-                             user=self.conf['db_user'])
-        c = db.cursor()
-        sql = ("INSERT IGNORE INTO account_external_ids VALUES"
-               "(%d, NULL, NULL, 'gerrit:%s');" %
-               (account_id, username))
-        try:
-            c.execute(sql)
-            db.commit()
-            return True
-        except Exception:
-            msg = "Could not insert user %s in account_external_ids" % username
-            logger.exception(msg)
-            return False
-
     def set_api_key(self, user, password):
         """add http password for username."""
         if user == "admin":
@@ -92,34 +58,5 @@ class GerritServicePlugin(base.BaseServicePlugin):
             logger.error(msg)
 
     def register_new_user(self, user):
-        if not self.conf.get("register_user", True):
-            return
-        _user = {"name": str(user['name']), "email": str(user['email'])}
-        data = json.dumps(_user, default=lambda o: o.__dict__)
-
-        headers = {"Content-type": "application/json"}
-        url = "%s/accounts/%s" % (self.conf['url'], user['login'])
-        response = requests.put(url, data=data, headers=headers,
-                                auth=("admin", self.conf['password']))
-        if not response.ok:
-            msg = 'Failed to register new user %s: %s' % (user['email'],
-                                                          response)
-            logger.error(msg)
-            return False
-
-        response = requests.get(url, headers=headers,
-                                auth=("admin", self.conf['password']))
-        data = response.content[4:]  # there is some garbage at the beginning
-        try:
-            account_id = json.loads(data)['_account_id']
-        except (KeyError, ValueError):
-            msg = 'Failed to retreive account %s from server' % user['email']
-            logger.exception(msg)
-            return False
-
-        fetch_ssh_keys = False
-        if account_id:
-            fetch_ssh_keys = self.add_account_as_external(account_id,
-                                                          user['login'])
-        if user.get('ssh_keys', None) and fetch_ssh_keys:
-            self.add_sshkeys(user['login'], user['ssh_keys'])
+        # This is managed by the manageSF driver service/managesf.py
+        pass
