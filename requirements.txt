@@ -1,4 +1,4 @@
-oic==0.9.4
+oic==1.2.1
 pbr>=1.6
 basicauth==0.4.1
 pecan==1.0.3
