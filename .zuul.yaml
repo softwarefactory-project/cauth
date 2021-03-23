@@ -9,10 +9,13 @@
               tox_install_siblings: false
             nodeset:
               nodes:
-                - name: fedora
-                  label: cloud-fedora-30-small
+                - name: centos-8
+                  label: pod-centos-8
         - tox-pep8:
-            nodeset: fedora-latest-pod
+            nodeset:
+              nodes:
+                - name: centos-8
+                  label: pod-centos-8
     gate:
       queue: sf
       jobs:
@@ -21,7 +24,10 @@
               tox_install_siblings: false
             nodeset:
               nodes:
-                - name: fedora
-                  label: cloud-fedora-30-small
+                - name: centos-8
+                  label: pod-centos-8
         - tox-pep8:
-            nodeset: fedora-latest-pod
+            nodeset:
+              nodes:
+                - name: centos-8
+                  label: pod-centos-8
